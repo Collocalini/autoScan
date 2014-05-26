@@ -28,6 +28,7 @@ import Control.Monad.Writer
 
 ---from this project
 import Global
+import PatternRecognition
 ---end of imports from this project
 
 

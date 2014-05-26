@@ -138,20 +138,21 @@ loadImage name = do image <- CPic.readImage name
                       (Right d) ->
                                  do
                                     return  $ Just $ (\(CPic.ImageRGB8 i) -> i) d
-                                    --return  $ Just $ CPic.pixelAt ((\(CPic.ImageRGB8 i) -> i) d) 0 0
-                                    --return $ Just d
+                                 --return  $ Just $ CPic.pixelAt ((\(CPic.ImageRGB8 i) -> i) d) 0 0
+                                 --return $ Just d
 
        --(Maybe CPic.PixelRGB8) --(Maybe CPic.DynamicImage)
 ----------------------------------------------------------------------------------------------------
 
 
 
-
+{-- ================================================================================================
+================================================================================================ --}
 rgb2grayscale :: CPic.Image CPic.PixelRGB8 -> CPic.Image CPic.Pixel8
 rgb2grayscale img = CPic.pixelMap step1 img
   where
   step1 :: CPic.PixelRGB8 -> CPic.Pixel8
   step1 (CPic.PixelRGB8 r g b) = div (r+g+b) 3
-
+----------------------------------------------------------------------------------------------------
 
 

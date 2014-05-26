@@ -1,16 +1,20 @@
 Version of session file format:
                1
 Time of storage:
-               "Mon May 26 16:32:46 GET 2014"
-Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 0, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) 906
-Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 3392)),[SplitP LeftP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 494)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 40)),[SplitP LeftP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
-Window size:   (1280,993)
+               "Mon May 26 23:53:12 MSK 2014"
+Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 2, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 3, detachedId = Nothing, detachedSize = Nothing}) 1271
+Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (FilesSt FilesState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 3392)),[SplitP LeftP]),(Just (HLintSt HLintState),[SplitP RightP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 494)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 1317)),[SplitP LeftP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
+Window size:   (1675,1022)
+Full screen:   False
+Dark:          False
+Completion size:
+               (750,400)
 Workspace:     Just "/home/hokum/Documents/haskell/autoScan/autoScan.lkshw"
-Active pane:   Just "Global.hs"
+Active pane:   Just "PatternRecognition.hs"
 Toolbar visible:
                True
 FindbarState:  (True,FindState {entryStr = "", entryHist = ["iterate_all_data tag_DMap $\n                )","iterate_all_data tag_DMap $\n                o)","iterate_all_data tag_DMap $\n                To)","iterate_all_data tag_DMap $\n                tTo)","iterate_all_data tag_DMap $\n                ptTo)","iterate_all_data tag_DMap $\n                aptTo)","iterate_all_data tag_DMap $\n                daptTo)","iterate_all_data tag_DMap $\n                adaptTo)","iterate_all_data tag_DMap $\n                 adaptTo)","iterate_all_data tag_DMap $\n                  adaptTo)","iterate_all_data tag_DMap $\n                   adaptTo)","iterate_all_data tag_DMap $\n                    adaptTo)"], replaceStr = "", replaceHist = [], caseSensitive = False, entireWord = False, wrapAround = False, regex = False, lineNr = 1})
 Recently opened files:
-               ["/home/hokum/Documents/haskell/hairProject/src/Global.hs","/home/hokum/Documents/haskell/hairProject/src/Main.hs","/home/hokum/Documents/haskell/hairProject/src/HairMain.hs","/home/hokum/Documents/haskell/hairProject/src/HairMain","/home/hokum/Documents/haskell/extract_backup/src/Global.hs","/home/hokum/Documents/haskell/extract_backup/src/Main.hs","/home/hokum/Documents/haskell/diser/src/TriangularPattern.hs","/home/hokum/Documents/haskell/diser/src/AdHoc.hs","/home/hokum/Documents/haskell/diser/src/Global.hs","/home/hokum/Documents/haskell/diser/src/Processors.hs","/home/hokum/Documents/haskell/diser/src/Main.hs","/home/hokum/Documents/haskell/diser/src/Tests.hs"]
+               ["/home/hokum/Documents/haskell/extract_backup/extractBackup.cabal","/home/hokum/Documents/haskell/extract_backup/src/Global.hs","/home/hokum/Documents/haskell/extract_backup/src/Main.hs","/home/hokum/Documents/haskell/diser/src/AdHoc.hs","/home/hokum/Documents/haskell/diser/src/Global.hs","/home/hokum/Documents/haskell/diser/src/Main.hs","/home/hokum/Documents/haskell/diser/src/Processors.hs","/home/hokum/Documents/haskell/diser/src/TriangularPattern.hs","/home/hokum/Documents/haskell/diser/diser.cabal","/home/hokum/Documents/haskell/my_siteH/src/Main.hs","/home/hokum/.leksah-0.13/leksah-welcome/src/Main.hs"]
 Recently opened workspaces:
-               ["/home/hokum/Documents/haskell/extract_backup/extractBackup.lkshw","/home/hokum/Documents/haskell/diser/diser.lkshw","/home/hokum/Documents/haskell/backup_srv/backup_srv.lkshw","/home/hokum/Documents/haskell/elektroservis_vpn/elVPN.lkshw","/home/hokum/Documents/haskell/my_siteH/mySite.lkshw","/home/hokum/Documents/haskell/ESsrv/essrv.lkshw","/home/hokum/Documents/haskell/Mcom/Mcom.lkshw","/home/hokum/Documents/haskell/hello/hello.lkshw","/home/hokum/Documents/haskell/hello.lkshw"]
+               ["/home/hokum/Documents/haskell/diser/diser.lkshw","/home/hokum/Documents/haskell/my_siteH/mySite.lkshw","/home/hokum/leksah.lkshw"]
