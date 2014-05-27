@@ -6,8 +6,8 @@ license: AllRightsReserved
 license-file: ""
 copyright:
 maintainer:
-build-depends: JuicyPixels -any, base -any, containers -any,
-               monads-tf -any
+build-depends: JuicyPixels -any, array -any, base -any,
+               containers -any, monads-tf -any, process -any
 stability:
 homepage:
 package-url:

@@ -34,11 +34,26 @@ import PatternRecognition
 
 
 
+
+
+
+
 {-- ================================================================================================
 ================================================================================================ --}
 routine:: [String] -> IO ()
 routine args
-  |otherwise = return ()
+  |otherwise = --return ()
+               do
+                files <- ls "./ls_script" ""
+
+                images <- mapM (rgb2grayscale_io_maybe.loadImage) files
+
+               -- putStrLn $ show $ check_pattern [1,0,1,0]
+             --   putStrLn $ show $ checker_pattern_areas 2482 3507 5 5
+             --   putStrLn $ show $ detect_bookmarks_maybe images
+                --putStrLn ""
+                putStrLn $ show $ detect_bookmarks_maybe images
+                --putStrLn $ show $ files
   where
 
     tag_DMap' = tag_DMap args
