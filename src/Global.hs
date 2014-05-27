@@ -189,6 +189,6 @@ ls :: String -> -- ls
   IO [String]
 ls file properties  =
     do s <- readProcess (file ++ properties) [] ""
-       putStrLn $ (file ++ properties)
+       --putStrLn $ (file ++ properties)
        return $ lines s
 ----------------------------------------------------------------------------------------------------

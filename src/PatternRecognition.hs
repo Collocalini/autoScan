@@ -4,7 +4,10 @@ module PatternRecognition (
 checker_pattern_areas,
 check_pattern,
 detect_bookmarks,
-detect_bookmarks_maybe
+detect_bookmarks_maybe,
+detect_bookmark_maybe,
+detect_bookmarks_maybe_io,
+detect_bookmark_maybe_io
 ) where
 
 import qualified Codec.Picture as CPic
@@ -117,6 +120,11 @@ detect_bookmark image = (check_pattern.(\i -> average_areas i (cp i))) image
 detect_bookmark_maybe :: Maybe (CPic.Image CPic.Pixel8) -> Maybe Bool
 detect_bookmark_maybe Nothing = Nothing
 detect_bookmark_maybe (Just image) = Just $ detect_bookmark image
+
+detect_bookmark_maybe_io :: IO (Maybe (CPic.Image CPic.Pixel8)) -> IO (Maybe Bool)
+detect_bookmark_maybe_io image = do
+                                      i <- image
+                                      return $ detect_bookmark_maybe i
 ----------------------------------------------------------------------------------------------------
 
 
@@ -129,6 +137,12 @@ detect_bookmarks images = map detect_bookmark images
 detect_bookmarks_maybe :: [Maybe (CPic.Image CPic.Pixel8)] -> [Maybe Bool]
 detect_bookmarks_maybe [] = []
 detect_bookmarks_maybe images = map detect_bookmark_maybe images
+
+detect_bookmarks_maybe_io :: IO [(Maybe (CPic.Image CPic.Pixel8))] -> IO [Maybe Bool]
+--detect_bookmarks_maybe_io [] = return []
+detect_bookmarks_maybe_io images = do
+                                      i <- images
+                                      return $ detect_bookmarks_maybe i
 ----------------------------------------------------------------------------------------------------
 
 
