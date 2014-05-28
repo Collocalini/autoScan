@@ -1,7 +1,9 @@
 
 module Global (
 
-
+Perform(..),
+InputArguments(..),
+InputArgs(..),
 
 flags ,
 
@@ -33,12 +35,29 @@ ls
 
 import qualified Data.Map as DMap
 import qualified Codec.Picture as CPic
+import Control.Monad.State
 --import Data.List
 import System.Process
 import System.IO
 --import System.Directory
 --import Data.Time
 --import System.Locale
+
+
+data Perform = Analyse|SaveAnalysisResults|UseAnalysisResults
+data InputArguments = InputArguments {
+                                      analysis_results_file :: FilePath
+                                     ,analysis_detected_pages_to :: FilePath
+                                     ,analysis_white_pages_to :: FilePath
+                                     ,perform :: [Perform]
+                                     ,mark_with :: String
+                                     ,white_pages_to_pdf  :: FilePath
+                                     ,detected_pages_to_pdf :: FilePath
+                                     ,scans_to_pdfs :: FilePath
+                                     ,scripts_folder :: FilePath
+                                     }
+
+type InputArgs = InputArguments
 
 
 
@@ -209,7 +228,7 @@ loadImage name = do image <- CPic.readImage name
 
 {-- ================================================================================================
 ================================================================================================ --}
-rgb2grayscale ::CPic.DynamicImage -> CPic.Image CPic.Pixel8
+rgb2grayscale :: CPic.DynamicImage -> CPic.Image CPic.Pixel8
 rgb2grayscale (CPic.ImageRGB8 img) = CPic.pixelMap step1 img
   where
   step1 :: CPic.PixelRGB8 -> CPic.Pixel8

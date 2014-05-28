@@ -25,6 +25,7 @@ import Data.List
 --import qualified Data.Set as DSet
 --import qualified Data.Map as DMap
 import Control.Monad.Writer
+import Control.Monad.Reader
 import Control.DeepSeq
 import qualified Codec.Picture as CPic
 
@@ -66,11 +67,13 @@ generate_concat_prescription scripts_folder = do
 
 
 
-analyse :: String -> IO [(FilePath, Int, PageMark)]
-analyse scripts_folder = do
-   files <- ls (scripts_folder ++ "/ls_script") ""
-   step1 files 0
+analyse ::  ReaderT InputArgs IO [(FilePath, Int, PageMark)]
+analyse = do
 
+   (InputArguments {scripts_folder = scripts_folder'}) <- ask
+   files <- lift $ ls (scripts_folder' ++ "/ls_script") ""
+   lift $ step1 files 0
+  --step1 [] 0
    where
 
    step1 :: [FilePath] -> Int -> IO [(FilePath, Int, PageMark)]
