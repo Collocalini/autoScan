@@ -42,12 +42,51 @@ import System.IO
 
 
 
+argument_analysis_results_file = "analysis-results-file"
+argument_analysis_detected_pages_to = "analysis-detected-pages-to"
+argument_analysis_white_pages_to = "analysis-white-pages-to"
+argument_perform = "perform"
+argument_mark_with = "mark-with"
+argument_white_pages_to_pdf = "white-pages-to-pdf"
+argument_detected_pages_to_pdf = "detected-pages-to-pdf"
+argument_scans_to_pdfs = "scans-to-pdfs"
+argument_scripts_folder = "scripts-folder"
+
+
+
+default_analysis_results_file = ""
+default_analysis_detected_pages_to = ""
+default_analysis_white_pages_to = ""
+default_perform = ""
+default_mark_with = "auto"
+default_white_pages_to_pdf = ""
+default_detected_pages_to_pdf = ""
+default_scripts_folder = "."
+default_scans_to_pdfs = ""
+
+
+
+perform_stage_analyse = "analyse"
+perform_stage_save_analysis_results = "save-analysis-results"
+perform_stage_use_analysis_results = "use-analysis-results"
+
+
+
+
 flags = [
 
         ]
 
 options =  [
-
+             argument_analysis_results_file,
+             argument_analysis_detected_pages_to,
+             argument_analysis_white_pages_to,
+             argument_perform,
+             argument_mark_with,
+             argument_white_pages_to_pdf,
+             argument_detected_pages_to_pdf,
+             argument_scans_to_pdfs,
+             argument_scripts_folder
            ]
 
 {-- ================================================================================================
@@ -55,7 +94,15 @@ options =  [
 tag_DMap:: [String] -> DMap.Map String String
 tag_DMap [] = DMap.fromList [
         --("",""),
-
+          (argument_analysis_results_file,       default_analysis_results_file),
+          (argument_analysis_detected_pages_to,  default_analysis_detected_pages_to),
+          (argument_analysis_white_pages_to,     default_analysis_white_pages_to),
+          (argument_perform,                     default_perform),
+          (argument_mark_with,                   default_mark_with),
+          (argument_white_pages_to_pdf,          default_white_pages_to_pdf),
+          (argument_detected_pages_to_pdf,       default_detected_pages_to_pdf),
+          (argument_scans_to_pdfs,               default_scans_to_pdfs),
+          (argument_scripts_folder,              default_scripts_folder)
 
    ]----]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 

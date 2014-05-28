@@ -26,6 +26,7 @@ import Data.List
 --import qualified Data.Map as DMap
 import Control.Monad.Writer
 import Control.DeepSeq
+import qualified Codec.Picture as CPic
 
 ---from this project
 import Global
@@ -33,18 +34,15 @@ import PatternRecognition
 ---end of imports from this project
 
 
-
-generate_concat_prescription :: IO ()
-generate_concat_prescription = do
-   files <- ls "./ls_script" ""
-   --let images =
-   --let detect f = (detect_bookmarks_maybe_io $ mapM (rgb2grayscale_io_maybe.loadImage) f)
+data PageMark = Page|WhitePage|FaultyPage|Separator
 
 
-   --(detect $ take 3 files) >>=
-   --  (\d -> putStr $ unlines $ step2 (zip  d $ take 3 files) 0)
+
+generate_concat_prescription :: String -> IO ()
+generate_concat_prescription scripts_folder = do
+   files <- ls (scripts_folder ++ "/ls_script") ""
    step1 files 0
-   --return ()
+
    where
 
    step1 :: [FilePath] -> Int -> IO ()
@@ -55,33 +53,77 @@ generate_concat_prescription = do
       (Just False) -> do
                        putStrLn $ (take ((length f)-3) f ++ "pdf   auto" ++ show i)
                        step1 rest i
-                  --   return ()
+
       (Nothing) ->    do
                        putStrLn $ (take ((length f)-3) f ++ "pdf        auto" ++ show i)
                        step1 rest i
-                  --   return ()
+
       (Just True) ->  i `deepseq` (step1 rest $ i+1)
 
       where
       detect f = (detect_bookmark_maybe_io $ (to_grayscale_io_maybe.loadImage) f)
 
-      --to_take = take 1 f
 
-   {--
-   step2 :: [(Maybe Bool,FileName)] -> Int -> [String]
-   step2 [] _ = []
-   step2 ((Just False, f):rest) i = (take ((length f)-3) f ++ "pdf   auto" ++ show i):(step2 rest i)
-   step2 ((Nothing   , f):rest) i = (take ((length f)-3) f ++ "pdf   auto" ++ show i):(step2 rest i)
-   step2 ((Just True , f):rest) i = i `deepseq` (step2 rest $ i+1)
---}
+
+
+analyse :: String -> IO [(FilePath, Int, PageMark)]
+analyse scripts_folder = do
+   files <- ls (scripts_folder ++ "/ls_script") ""
+   step1 files 0
+
+   where
+
+   step1 :: [FilePath] -> Int -> IO [(FilePath, Int, PageMark)]
+   step1 [] _ = return []
+   step1 (f:rest) i  = do
+     dl <- detect f
+     case dl of
+      (Just False) -> do
+                       putStrLn $ (take ((length f)-3) f ++ "pdf   auto" ++ show i)
+                       return $ (f,i,Page)
+                       step1 rest i
+
+      (Nothing) ->    do
+                       putStrLn $ (take ((length f)-3) f ++ "pdf   fault" ++ show i)
+                       return $ (f,i,FaultyPage)
+                       step1 rest i
+
+      (Just True) ->  do
+                       putStrLn $ (take ((length f)-3) f ++ "pdf   separator" ++ show i)
+                       return $ (f,i,Separator)
+                       i `deepseq` (step1 rest $ i+1)
+
+      where
+      detect f = (detect_bookmark_maybe_io $ (to_grayscale_io_maybe.loadImage) f)
+
+
+
+
+groupByFile :: [(FilePath, Int, PageMark)] -> [[(FilePath, Int, PageMark)]]
+groupByFile f = groupBy mark f
+  where
+  mark :: (FilePath, Int, PageMark) -> (FilePath, Int, PageMark) -> Bool
+  mark (_, i, _) (_, i1, _) = i == i1
+
+
+
+weedWhitePages :: [(FilePath, Int, PageMark)] ->
+                 ([(FilePath, Int, PageMark)],[(FilePath, Int, PageMark)])
+weedWhitePages f = partition iswhite f
+  where
+  iswhite (_, _, WhitePage) = True
+  iswhite (_, _, _)         = False
+
+
 
 {-- ================================================================================================
 ================================================================================================ --}
 routine:: [String] -> IO ()
 routine args
   |otherwise = --return ()
-               generate_concat_prescription
+               generate_concat_prescription "."
   where
+
 
     tag_DMap' = tag_DMap args
 

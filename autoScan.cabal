@@ -7,8 +7,7 @@ license-file: ""
 copyright:
 maintainer:
 build-depends: JuicyPixels -any, array -any, base -any,
-               containers -any, monads-tf -any, process -any,
-               deepseq -any
+               containers -any, deepseq -any, monads-tf -any, process -any
 stability:
 homepage:
 package-url:
@@ -22,7 +21,7 @@ data-files:
 data-dir: ""
 extra-source-files:
 extra-tmp-files:
-
+ 
 executable: autoScan
 main-is: Main.hs
 buildable: True
