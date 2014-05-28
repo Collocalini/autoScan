@@ -57,13 +57,13 @@ generate_concat_prescription = do
                        step1 rest i
                   --   return ()
       (Nothing) ->    do
-                       putStrLn $ (take ((length f)-3) f ++ "pdf   auto" ++ show i)
+                       putStrLn $ (take ((length f)-3) f ++ "pdf        auto" ++ show i)
                        step1 rest i
                   --   return ()
       (Just True) ->  i `deepseq` (step1 rest $ i+1)
 
       where
-      detect f = (detect_bookmark_maybe_io $ (rgb2grayscale_io_maybe.loadImage) f)
+      detect f = (detect_bookmark_maybe_io $ (to_grayscale_io_maybe.loadImage) f)
 
       --to_take = take 1 f
 

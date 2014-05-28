@@ -43,7 +43,7 @@ hs-source-dirs: src
 other-modules: PatternRecognition Global
 ghc-prof-options:
 ghc-shared-options:
-ghc-options:
+ghc-options: -rtsopts
 hugs-options:
 nhc98-options:
 jhc-options:
