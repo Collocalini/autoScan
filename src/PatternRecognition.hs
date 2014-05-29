@@ -46,7 +46,7 @@ checker_pattern_areas w h sh sv =
 
 {-- ================================================================================================
 ================================================================================================ --}
-average_areas :: CPic.Image CPic.Pixel8 -> [(Int, Int, Int, Int)] -> [Float] -- DArray.Array (Int,Int) Float
+average_areas :: CPic.Image CPic.Pixel8 -> [(Int, Int, Int, Int)] -> [Float]
 average_areas img ars = --DArray.array ((1,1),(5,5)) [((x,y), 1) | x <- [0 .. w], y <- [0 .. h]]
                         map (average_area img) ars
   --where

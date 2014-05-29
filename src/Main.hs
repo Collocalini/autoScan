@@ -159,6 +159,7 @@ save_analysis_stage a = do
 {-- ================================================================================================
 ================================================================================================ --}
 save_analysis_results_file :: Maybe FilePath -> [(FilePath, Int, PageMark)] -> IO ()
+save_analysis_results_file Nothing _ = return ()
 save_analysis_results_file (Just f) a = do
    putStrLn $ "save_analysis_results_file" ++ (unlines $ map step1 a)
 
@@ -218,10 +219,27 @@ use_analysis_stage a = do
   step1 f (a@((_, i, _):_):rest) = ((gs f i) ++ (concat $ step2 a)):(step1 f rest)
     where
       step2 [] = []
-      step2 ((fp, _, Page):rest) = (take ((length fp)-3) fp ++ "pdf  ") : (step2 rest)
-      step2 ((fp, _, FaultyPage):rest) = (take ((length fp)-3) fp ++ "pdf  ") : (step2 rest)
+      step2 ((fp, _, Page):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
+      step2 ((fp, _, FaultyPage):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
       step2 ((fp, _, _):rest) = step2 rest
       gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=" ++ f ++ show i ++ ".pdf "
+----------------------------------------------------------------------------------------------------
+
+
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
+read_analysis_file_Ia :: ReaderT InputArguments IO [(FilePath, Int, PageMark)]
+read_analysis_file_Ia =  do
+   (InputArguments {analysis_results_file = analysis_results_file'}) <- ask
+   f <- lift $ read_file_if_exists $ step1 analysis_results_file'
+   lift $ (return . read_analysis_file . (map words) . lines) f
+   where
+   step1 :: Maybe FilePath -> String
+   step1 (Just f) = f
+   step1 Nothing = []
 ----------------------------------------------------------------------------------------------------
 
 
@@ -234,32 +252,89 @@ use_analysis_stage a = do
 we_need_to_go_DEEPER :: ReaderT InputArguments IO ()
 we_need_to_go_DEEPER = do
   (InputArguments {perform = perform'}) <- ask
-  lift $ putStrLn $ "we_need_to_go_DEEPER" ++ show perform'
-  step1 perform'
+ -- lift $ putStrLn $ "we_need_to_go_DEEPER" ++ show perform'
+  step1 $ perform'
  -- lift $ putStr ""
   where
-  step1 :: Maybe [Perform] -> ReaderT InputArguments IO ()
-  step1 Nothing = do   lift $ putStrLn "Nothing"
-                       a <- analyse
-                       lift $ putStrLn $ "Nothing  " ++ (show a)
-                       return ()
-  step1 (Just []) = do lift $ putStrLn "(Just [])"
-                       analyse
-                       return ()
-  step1 (Just [Analyse]) = do lift $ putStrLn "(Just [Analyse])"
-                              analyse
-                              return ()
-  step1 (Just [Analyse,SaveAnalysisResults]) = do   lift $ putStrLn "[Analyse,SaveAnalysisResults]"
-                                                    save_analysis_stage =<<  analyse
-  step1 (Just [Analyse,SaveAnalysisResults,UseAnalysisResults]) = do
-     a <- analyse
-     save_analysis_stage a
-     use_analysis_stage a
 
-  step1 (Just [Analyse,UseAnalysisResults]) = do use_analysis_stage =<<  analyse
+  step1 :: Maybe [Perform] -> ReaderT InputArguments IO ()
+  step1 Nothing = step2a
+  step1 (Just []) = step2a
+  step1 (Just p) = step2 $ prepareActions p
+
+
+-----------------------
+
+
+  step2 :: [Perform] -> ReaderT InputArguments IO ()
+  step2 [Analyse] = step2a
+  step2 [Analyse,SaveAnalysisResults] = step2b
+  step2 [Analyse,UseAnalysisResults] = step2bb
+  step2 [Analyse,SaveAnalysisResults,UseAnalysisResults] = step2c
+
+
+  step2 [ReadAnalysis] = return ()
+  step2 [ReadAnalysis,SaveAnalysisResults] = step2b1
+  step2 [ReadAnalysis,UseAnalysisResults] = step2bb1
+  step2 [ReadAnalysis,SaveAnalysisResults,UseAnalysisResults] = step2c1
+
+  step2a = do analyse
+              return ()
+  step2b = save_analysis_stage =<<  analyse
+
+  step2bb = use_analysis_stage =<<  analyse
+
+  step2c = do a <- analyse
+              save_analysis_stage a
+              use_analysis_stage a
+
+  step2b1 = save_analysis_stage =<< read_analysis_file_Ia
+
+  step2bb1 = use_analysis_stage =<<  read_analysis_file_Ia
+
+  step2c1 = do a <- read_analysis_file_Ia
+               save_analysis_stage a
+               use_analysis_stage a
+--------------------------------------
+
+
+  prepareActions :: [Perform] -> [Perform]
+  --prepareActions [] = []
+  prepareActions p
+    |any haveAnalyse p && any haveReadAnalysis p = []
+    |any haveAnalyse p && (not $ any haveReadAnalysis p) = (Analyse):(prepareActions_a p)
+    |(not $ any haveAnalyse p) && (any haveReadAnalysis p) = (ReadAnalysis):(prepareActions_a p)
+    |(not $ any haveAnalyse p) && (not $ any haveReadAnalysis p) = []
+    |otherwise = []
+    where
+    prepareActions_a :: [Perform] -> [Perform]
+    --prepareActions_a [] = []
+    prepareActions_a p
+     |(any haveSaveAnalysisResults p) =
+       (\(_,r) -> (SaveAnalysisResults):prepareActions_a r) $ partition (haveSaveAnalysisResults) p
+     |(any haveUseAnalysisResults p) =
+       (\(_,r) -> (UseAnalysisResults):prepareActions_a r) $ partition (haveUseAnalysisResults) p
+     |otherwise = []
+
+  haveAnalyse :: Perform -> Bool
+  haveAnalyse Analyse = True
+  haveAnalyse _ = False
+
+  haveReadAnalysis :: Perform -> Bool
+  haveReadAnalysis ReadAnalysis = True
+  haveReadAnalysis _ = False
+
+  haveSaveAnalysisResults :: Perform -> Bool
+  haveSaveAnalysisResults SaveAnalysisResults = True
+  haveSaveAnalysisResults _ = False
+
+  haveUseAnalysisResults :: Perform -> Bool
+  haveUseAnalysisResults UseAnalysisResults = True
+  haveUseAnalysisResults _ = False
+
 ----------------------------------------------------------------------------------------------------
 
-
+--}
 
 
 

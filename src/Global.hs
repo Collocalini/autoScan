@@ -32,22 +32,24 @@ to_grayscale_io_maybe,
 
 
 run_script,
-ls
+ls,
+
+read_analysis_file
 
 ) where
 
 import qualified Data.Map as DMap
 import qualified Codec.Picture as CPic
 --import Control.Monad.State
---import Data.List
+import Data.List
 import System.Process
 import System.IO
 --import System.Directory
 --import Data.Time
 --import System.Locale
 
-data PageMark = Page|WhitePage|FaultyPage|Separator deriving Show
-data Perform = Analyse|SaveAnalysisResults|UseAnalysisResults deriving Show
+data PageMark = Page|WhitePage|FaultyPage|Separator deriving (Show, Read)
+data Perform = Analyse|ReadAnalysis|SaveAnalysisResults|UseAnalysisResults deriving Show
 data InputArguments = InputArguments {
                                       analysis_results_file :: Maybe FilePath
                                      ,analysis_detected_pages_to :: Maybe FilePath
@@ -169,7 +171,9 @@ default_scans_to_pdfs = ""
 
 
 
+
 perform_stage_analyse = "analyse"
+perform_stage_read_analysis = "read-analysis"
 perform_stage_save_analysis_results = "save-analysis-results"
 perform_stage_use_analysis_results = "use-analysis-results"
 
@@ -386,8 +390,7 @@ to_grayscale_io_maybe img = do i <- img
 
 {-- ================================================================================================
 ================================================================================================ --}
-run_script :: String -> -- output filename(possibly temporaly)
-                  IO ()
+run_script :: String -> IO ()
 run_script script = do (runCommand $ script ) >>= waitForProcess
                        return ()
 ----------------------------------------------------------------------------------------------------
@@ -408,3 +411,27 @@ ls file properties  =
        --putStrLn $ (file ++ properties)
        return $ lines s
 ----------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
+read_analysis_file :: [[String]] -> [(FilePath, Int, PageMark)]
+read_analysis_file f = step2 $ map step1 f
+   where
+   step1 :: [String] -> Maybe (FilePath, Int, PageMark)
+   step1 [] = Nothing
+   step1 [_,_] = Nothing
+   step1 [a,b,c] = Just (a, read b, read c)
+   step1 (a:b:c:rest) = (a ++ b) `seq` step1 $ (a ++ b):c:rest
+
+   step2 [] = []
+   step2 ((Just x):rest) = x:step2 rest
+   step2 ((Nothing):rest) = step2 rest
+----------------------------------------------------------------------------------------------------
+
+
+
