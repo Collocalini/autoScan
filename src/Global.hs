@@ -1,9 +1,10 @@
 
 module Global (
 
+PageMark(..),
 Perform(..),
 InputArguments(..),
-InputArgs(..),
+inputArgs,
 
 flags ,
 
@@ -29,13 +30,15 @@ rgb2grayscale,
 rgb2grayscale_io_maybe,
 to_grayscale_io_maybe,
 
+
+run_script,
 ls
 
 ) where
 
 import qualified Data.Map as DMap
 import qualified Codec.Picture as CPic
-import Control.Monad.State
+--import Control.Monad.State
 --import Data.List
 import System.Process
 import System.IO
@@ -43,21 +46,102 @@ import System.IO
 --import Data.Time
 --import System.Locale
 
-
-data Perform = Analyse|SaveAnalysisResults|UseAnalysisResults
+data PageMark = Page|WhitePage|FaultyPage|Separator deriving Show
+data Perform = Analyse|SaveAnalysisResults|UseAnalysisResults deriving Show
 data InputArguments = InputArguments {
-                                      analysis_results_file :: FilePath
-                                     ,analysis_detected_pages_to :: FilePath
-                                     ,analysis_white_pages_to :: FilePath
-                                     ,perform :: [Perform]
+                                      analysis_results_file :: Maybe FilePath
+                                     ,analysis_detected_pages_to :: Maybe FilePath
+                                     ,analysis_white_pages_to :: Maybe FilePath
+                                     ,perform :: Maybe [Perform]
                                      ,mark_with :: String
-                                     ,white_pages_to_pdf  :: FilePath
-                                     ,detected_pages_to_pdf :: FilePath
-                                     ,scans_to_pdfs :: FilePath
+                                     ,white_pages_to_pdf  :: Maybe FilePath
+                                     ,detected_pages_to_pdf :: Maybe FilePath
+                                     ,scans_to_pdfs :: Maybe FilePath
                                      ,scripts_folder :: FilePath
                                      }
 
-type InputArgs = InputArguments
+
+{-- ================================================================================================
+================================================================================================ --}
+inputArgs :: DMap.Map String String -> InputArguments
+inputArgs tm = InputArguments {
+
+   analysis_results_file = analysis_results_file'
+
+  ,analysis_detected_pages_to = analysis_detected_pages_to'
+
+  ,analysis_white_pages_to = analysis_white_pages_to'
+
+  ,perform = perform'
+
+  ,mark_with = mark_with'
+
+  ,white_pages_to_pdf = white_pages_to_pdf'
+
+  ,detected_pages_to_pdf = detected_pages_to_pdf'
+
+  ,scans_to_pdfs = scans_to_pdfs'
+
+  ,scripts_folder = scripts_folder'
+  }
+  where
+  analysis_results_file'
+     |s/= default_analysis_results_file = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_analysis_results_file argument_analysis_results_file tm)
+
+
+  analysis_detected_pages_to'
+     |s/= default_analysis_detected_pages_to = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_analysis_detected_pages_to
+                                                             argument_analysis_detected_pages_to tm)
+
+  analysis_white_pages_to'
+     |s/= default_analysis_white_pages_to = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_analysis_white_pages_to
+                                                             argument_analysis_white_pages_to tm)
+
+  perform'
+     |s/= default_perform = Just $ strListToPerform $ get_comma_separated s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_perform argument_perform tm)
+
+  mark_with' = (DMap.findWithDefault default_mark_with argument_mark_with tm)
+
+  white_pages_to_pdf'
+     |s/= default_white_pages_to_pdf = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_white_pages_to_pdf argument_white_pages_to_pdf
+                                                             tm)
+
+  detected_pages_to_pdf'
+     |s/= default_detected_pages_to_pdf = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_detected_pages_to_pdf
+                                                             argument_detected_pages_to_pdf tm)
+
+  scans_to_pdfs'
+     |s/= default_scans_to_pdfs = Just s
+     |otherwise = Nothing
+     where
+     s = (DMap.findWithDefault default_scans_to_pdfs argument_scans_to_pdfs tm)
+
+  scripts_folder' = (DMap.findWithDefault default_scripts_folder argument_scripts_folder tm)
+----------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 
 
 
@@ -168,6 +252,18 @@ get_comma_separated arg = words $ map commas2spaces arg
        |otherwise = c
 --------------------------------------------------------------------------------------------------
 
+
+
+{-- ================================================================================================
+================================================================================================ --}
+strListToPerform :: [String] -> [Perform]
+strListToPerform [] = []
+strListToPerform (s:rest)
+  |s== perform_stage_analyse = Analyse:strListToPerform rest
+  |s== perform_stage_save_analysis_results = SaveAnalysisResults:strListToPerform rest
+  |s== perform_stage_use_analysis_results = UseAnalysisResults:strListToPerform rest
+  |otherwise = strListToPerform rest
+----------------------------------------------------------------------------------------------------
 
 
 
@@ -281,6 +377,19 @@ to_grayscale_io_maybe :: IO (Maybe (CPic.DynamicImage)) ->
                           IO (Maybe ( CPic.Image CPic.Pixel8))
 to_grayscale_io_maybe img = do i <- img
                                return $ to_grayscale_maybe i
+----------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
+run_script :: String -> -- output filename(possibly temporaly)
+                  IO ()
+run_script script = do (runCommand $ script ) >>= waitForProcess
+                       return ()
 ----------------------------------------------------------------------------------------------------
 
 
