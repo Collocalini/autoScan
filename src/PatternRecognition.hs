@@ -7,11 +7,15 @@ detect_bookmarks,
 detect_bookmarks_maybe,
 detect_bookmark_maybe,
 detect_bookmarks_maybe_io,
-detect_bookmark_maybe_io
+detect_bookmark_maybe_io,
+detect_white_page,
+detect_white_page_maybe_io
+
 ) where
 
 import qualified Codec.Picture as CPic
 import qualified Data.List as DList
+import qualified Data.Vector.Storable as DVSec
 --import qualified Codec.Picture.Types as CPicT
 
 -- array                   :: (Ix a) => (a,a) -> [(a,b)] -> Array a b
@@ -144,6 +148,42 @@ detect_bookmarks_maybe_io images = do
                                       i <- images
                                       return $ detect_bookmarks_maybe i
 ----------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
+detect_white_page :: CPic.Image CPic.Pixel8 -> Int -> Bool
+detect_white_page (CPic.Image {CPic.imageWidth = _,
+                               CPic.imageHeight = _,
+                               CPic.imageData = image}) l = (abs cross - median) <= limit
+   where
+   ar = DVSec.toList image
+   ars = DList.sort ar
+   limit = fromIntegral l
+   min = head ars
+   max = last ars
+   cross = div (max - min) 2
+   median = DList.head $ DList.drop (div (DList.length ar) 2) ars
+
+
+detect_white_page_maybe :: Maybe (CPic.Image CPic.Pixel8) -> Maybe Int -> Maybe Bool
+detect_white_page_maybe Nothing Nothing = Nothing
+detect_white_page_maybe _ Nothing = Nothing
+detect_white_page_maybe Nothing _ = Nothing
+detect_white_page_maybe (Just image) (Just limit)= Just $ detect_white_page image limit
+
+
+detect_white_page_maybe_io :: IO (Maybe (CPic.Image CPic.Pixel8)) -> Maybe Int -> IO (Maybe Bool)
+detect_white_page_maybe_io image limit = do
+                                      i <- image
+
+                                      return $ detect_white_page_maybe i limit
+----------------------------------------------------------------------------------------------------
+
 
 
 

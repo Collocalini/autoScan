@@ -1,4 +1,4 @@
------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- Module      :  Main
 -- Copyright   :
@@ -75,40 +75,49 @@ analyse ::  ReaderT InputArguments IO [(FilePath, Int, PageMark)]
 analyse = do
 
    (InputArguments {scripts_folder = scripts_folder',
-                    mark_with = mark_with'
+                    mark_with = mark_with',
+                    white_page_tolerance = white_page_tolerance'
                    }) <- ask
    files <- lift $ ls (scripts_folder' ++ "/ls_script") ""
-   lift $ step1 files 0 mark_with'
+   lift $ step1 files 0 mark_with' white_page_tolerance'
   --step1 [] 0
    where
 
-   step1 :: [FilePath] -> Int -> String -> IO [(FilePath, Int, PageMark)]
-   step1 [] _ _ = return []
-   step1 (f:rest) i mark = do
-     dl <- detect f
-     case dl of
-      (Just False) -> do
-                       putStrLn $ f ++ "   " ++ mark ++ show i
-                       --return (f,i,Page)
-                       s <- (step1 rest i mark)
-                       return $ (f,i,Page):s
-
-      (Nothing) ->    do
-                       putStrLn $ f ++ "   fault-" ++ mark ++ show i
-                       --return (f,i,FaultyPage)
-                       --step1 rest i mark
-                       s <- (step1 rest i mark)
-                       return $ (f,i,FaultyPage):s
-      (Just True) ->  do
-                       putStrLn $ f ++ "   separator-" ++ mark ++ show i
-                       --return (f,i,Separator)
-                       --i `deepseq` (step1 rest (i+1) mark)
-                       s <- i `deepseq` (step1 rest (i+1) mark)
-                       return $ (f,i,Separator):s
+   step1 :: [FilePath] -> Int -> String -> Maybe Int -> IO [(FilePath, Int, PageMark)]
+   step1 [] _ _ _ = return []
+   step1 (f:rest) i mark wpt= do
+     let ll = load f
+     dl <- detect ll
+     dw <- whiteP ll wpt
+     case (dl,dw) of
+      (Just False, Just False) -> itsPage
+      (Just False, Just True)  -> itsWhite
+      (Just False, Nothing)    -> itsPage
+      (Nothing, _)             -> itsFaulty
+      (Just True, _)           -> itsSeparator
       --(_) ->  putStr ""
 
       where
-      detect f = (detect_bookmark_maybe_io $ (to_grayscale_io_maybe.loadImage) f)
+
+      itsPage = do  putStrLn $ f ++ "   " ++ mark ++ show i
+                    s <- (step1 rest i mark wpt)
+                    return $ (f,i,Page):s
+
+      itsFaulty = do  putStrLn $ f ++ "   fault-" ++ mark ++ show i
+                      s <- (step1 rest i mark wpt)
+                      return $ (f,i,FaultyPage):s
+
+      itsSeparator = do  putStrLn $ f ++ "   separator-" ++ mark ++ show i
+                         s <- i `deepseq` (step1 rest (i+1) mark wpt)
+                         return $ (f,i,Separator):s
+
+      itsWhite = do putStrLn $ f ++ "   " ++ mark ++ show i
+                    s <- (step1 rest i mark wpt)
+                    return $ (f,i,WhitePage):s
+
+      load f = (to_grayscale_io_maybe.loadImage) f
+      detect f = (detect_bookmark_maybe_io f)
+      whiteP f l = (detect_white_page_maybe_io f l)
 ----------------------------------------------------------------------------------------------------
 
 
@@ -223,8 +232,7 @@ use_analysis_stage a = do
       step2 ((fp, _, FaultyPage):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
       step2 ((fp, _, _):rest) = step2 rest
       gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=" ++ f ++ show i ++ ".pdf "
-----------------------------------------------------------------------------------------------------
-
+-----------------------------------------------------------------------------------------------------
 
 
 
@@ -241,7 +249,6 @@ read_analysis_file_Ia =  do
    step1 (Just f) = f
    step1 Nothing = []
 ----------------------------------------------------------------------------------------------------
-
 
 
 
@@ -353,7 +360,7 @@ routine args
 
     --tag_DMap' = tag_DMap args
 
-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 
 main = do
@@ -364,3 +371,5 @@ main = do
 
 
 -----   -static -optl-static -optl-pthread
+
+

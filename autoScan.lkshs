@@ -1,9 +1,9 @@
 Version of session file format:
                1
 Time of storage:
-               "Thu May 29 21:34:39 MSK 2014"
-Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 3, detachedId = Nothing, detachedSize = Nothing}) 1387
-Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (FilesSt FilesState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 14403)),[SplitP LeftP]),(Just (HLintSt HLintState),[SplitP RightP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 12116)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 5171)),[SplitP LeftP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
+               "Thu May 29 23:48:07 MSK 2014"
+Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 3, detachedId = Nothing, detachedSize = Nothing}) 1231
+Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (FilesSt FilesState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 1465)),[SplitP LeftP]),(Just (HLintSt HLintState),[SplitP RightP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 2840)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 7455)),[SplitP LeftP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
 Window size:   (1680,1025)
 Full screen:   False
 Dark:          False

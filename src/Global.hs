@@ -60,6 +60,7 @@ data InputArguments = InputArguments {
                                      ,detected_pages_to_pdf :: Maybe FilePath
                                      ,scans_to_pdfs :: Maybe FilePath
                                      ,scripts_folder :: FilePath
+                                     ,white_page_tolerance :: Maybe Int
                                      }
 
 
@@ -85,6 +86,8 @@ inputArgs tm = InputArguments {
   ,scans_to_pdfs = scans_to_pdfs'
 
   ,scripts_folder = scripts_folder'
+
+  ,white_page_tolerance = white_page_tolerance'
   }
   where
   analysis_results_file'
@@ -137,6 +140,9 @@ inputArgs tm = InputArguments {
      s = (DMap.findWithDefault default_scans_to_pdfs argument_scans_to_pdfs tm)
 
   scripts_folder' = (DMap.findWithDefault default_scripts_folder argument_scripts_folder tm)
+
+  white_page_tolerance' = read (DMap.findWithDefault default_white_page_tolerance
+                                                              argument_white_page_tolerance tm)
 ----------------------------------------------------------------------------------------------------
 
 
@@ -156,7 +162,7 @@ argument_white_pages_to_pdf = "white-pages-to-pdf"
 argument_detected_pages_to_pdf = "detected-pages-to-pdf"
 argument_scans_to_pdfs = "scans-to-pdfs"
 argument_scripts_folder = "scripts-folder"
-
+argument_white_page_tolerance = "white-page-tolerance"
 
 
 default_analysis_results_file = ""
@@ -168,7 +174,7 @@ default_white_pages_to_pdf = ""
 default_detected_pages_to_pdf = ""
 default_scripts_folder = "."
 default_scans_to_pdfs = ""
-
+default_white_page_tolerance = ""
 
 
 
@@ -193,7 +199,8 @@ options =  [
              argument_white_pages_to_pdf,
              argument_detected_pages_to_pdf,
              argument_scans_to_pdfs,
-             argument_scripts_folder
+             argument_scripts_folder,
+             argument_white_page_tolerance
            ]
 
 {-- ================================================================================================
@@ -209,7 +216,8 @@ tag_DMap [] = DMap.fromList [
           (argument_white_pages_to_pdf,          default_white_pages_to_pdf),
           (argument_detected_pages_to_pdf,       default_detected_pages_to_pdf),
           (argument_scans_to_pdfs,               default_scans_to_pdfs),
-          (argument_scripts_folder,              default_scripts_folder)
+          (argument_scripts_folder,              default_scripts_folder),
+          (argument_white_page_tolerance,        default_white_page_tolerance)
 
    ]----]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 
