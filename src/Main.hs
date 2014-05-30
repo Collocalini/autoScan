@@ -146,10 +146,14 @@ analyse = do
 {-- ================================================================================================
 ================================================================================================ --}
 groupByFile :: [(FilePath, Int, PageMark)] -> [[(FilePath, Int, PageMark)]]
-groupByFile f = groupBy mark f
+groupByFile f = filter (not.null) $ map (filter n_o_t_separator) $ groupBy mark f
   where
   mark :: (FilePath, Int, PageMark) -> (FilePath, Int, PageMark) -> Bool
   mark (_, i, _) (_, i1, _) = i == i1
+
+  n_o_t_separator (_, _, Separator) = False
+  n_o_t_separator (_, _, _) = True
+
 ----------------------------------------------------------------------------------------------------
 
 
@@ -262,6 +266,7 @@ use_analysis_stage a = do
   where
   step1 :: FilePath -> [[(FilePath, Int, PageMark)]] -> [String]
   step1 _ [] = []
+  --step1 f ([(_,_, Separator)]:rest) = step1 f rest
   step1 f ([]:rest) = step1 f rest
   step1 f (a@((_, i, _):_):rest) = ((gs f i) ++ (concat $ step2 a)):(step1 f rest)
     where
@@ -274,7 +279,7 @@ use_analysis_stage a = do
 
   step1a :: FilePath -> [[(FilePath, Int, PageMark)]] -> [String]
   step1a _ [] = []
-  step1a f ([]:rest) = step1 f rest
+  step1a f ([]:rest) = step1a f rest
   step1a f (a@((_, i, _):_):rest) = ((gs f i) ++ (concat $ step2 a)):(step1a f rest)
     where
       step2 [] = []
@@ -284,6 +289,7 @@ use_analysis_stage a = do
 
 
   o_o_l scans_to_pdfs' = do
+        --lift $ putStrLn $ show $ (\(_, d) -> groupByFile d) $ weedWhitePages a
         lift $ writeFile (scans_to_pdfs' ++ ".sh") $ unlines $ step1 scans_to_pdfs' $
                                                        (\(_, d) -> groupByFile d) $ weedWhitePages a
         lift $ run_script (scans_to_pdfs' ++ ".sh")

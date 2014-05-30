@@ -1,9 +1,9 @@
 Version of session file format:
                1
 Time of storage:
-               "Fri May 30 15:42:04 GET 2014"
-Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) 1061
-Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 4732)),[SplitP LeftP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 12894)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 7448)),[SplitP LeftP]),(Just (SearchSt (SearchState {searchString = "ls", searchScope = SystemScope, searchMode = Prefix {caseSense = False}})),[SplitP RightP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
+               "Fri May 30 16:45:53 GET 2014"
+Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) 936
+Population:    [(Just (ErrorsSt ErrorsState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Global.hs" 4732)),[SplitP LeftP]),(Just (LogSt LogState),[SplitP RightP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/Main.hs" 11259)),[SplitP LeftP]),(Just (BufferSt (BufferState "/home/hokum/Documents/haskell/autoScan/src/PatternRecognition.hs" 7448)),[SplitP LeftP]),(Just (SearchSt (SearchState {searchString = "ls", searchScope = SystemScope, searchMode = Prefix {caseSense = False}})),[SplitP RightP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP])]
 Window size:   (1280,993)
 Workspace:     Just "/home/hokum/Documents/haskell/autoScan/autoScan.lkshw"
 Active pane:   Just "Main.hs"
