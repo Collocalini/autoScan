@@ -141,8 +141,11 @@ inputArgs tm = InputArguments {
 
   scripts_folder' = (DMap.findWithDefault default_scripts_folder argument_scripts_folder tm)
 
-  white_page_tolerance' = read (DMap.findWithDefault default_white_page_tolerance
-                                                              argument_white_page_tolerance tm)
+  white_page_tolerance'
+    |s /= "" = Just $ read s
+    |s == "" = Nothing
+    where
+    s= (DMap.findWithDefault default_white_page_tolerance argument_white_page_tolerance tm)
 ----------------------------------------------------------------------------------------------------
 
 
@@ -272,6 +275,7 @@ strListToPerform :: [String] -> [Perform]
 strListToPerform [] = []
 strListToPerform (s:rest)
   |s== perform_stage_analyse = Analyse:strListToPerform rest
+  |s== perform_stage_read_analysis = ReadAnalysis:strListToPerform rest
   |s== perform_stage_save_analysis_results = SaveAnalysisResults:strListToPerform rest
   |s== perform_stage_use_analysis_results = UseAnalysisResults:strListToPerform rest
   |otherwise = strListToPerform rest

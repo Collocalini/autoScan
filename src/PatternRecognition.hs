@@ -156,28 +156,50 @@ detect_bookmarks_maybe_io images = do
 
 {-- ================================================================================================
 ================================================================================================ --}
-detect_white_page :: CPic.Image CPic.Pixel8 -> Int -> Bool
-detect_white_page (CPic.Image {CPic.imageWidth = _,
-                               CPic.imageHeight = _,
-                               CPic.imageData = image}) l = (abs cross - median) <= limit
+detect_white_page :: CPic.Image CPic.Pixel8 -> Int -> (Float, Bool)
+detect_white_page image@(CPic.Image {CPic.imageWidth = width,
+                                     CPic.imageHeight = height}) l =
+
+   --(abs (average95_100 - median)) <= limit
+   --(abs (average95_100 - median)) >=  limit
+
+   --(abs (max - min)) <=  limit
+   ((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
+   --(abs (max - min))
    where
-   ar = DVSec.toList image
-   ars = DList.sort ar
+
+   shave x y = CPic.pixelAt image (x+(div width 10)-1) (y+(div height 10)-1)
+
+   ar :: [CPic.Pixel8]
+   ar = (\(CPic.Image {CPic.imageWidth = _,
+                       CPic.imageHeight = _,
+                       CPic.imageData = d}) -> DVSec.toList d) $
+                       CPic.generateImage shave ((width)-(div width 10)) ((height)-(div height 10))
+   ars :: [Float]
+   ars = ar `seq`  DList.sort $ map fromIntegral ar
+
+   length = DList.length ars
+   length5ps = 5* (div length 100)
+   length95ps = 95 * (div length 100)
    limit = fromIntegral l
-   min = head ars
-   max = last ars
-   cross = div (max - min) 2
-   median = DList.head $ DList.drop (div (DList.length ar) 2) ars
+   --min = head ars
+   --max = last ars
+   --cross = (max - min) / 2
+   median :: Float
+   median = ars `seq`  DList.head $ DList.drop (div length 2) ars
+   average95_100 :: Float
+   average95_100 = ars `seq` ( (DList.sum $ DList.drop length95ps ars)) / (fromIntegral length5ps)
 
 
-detect_white_page_maybe :: Maybe (CPic.Image CPic.Pixel8) -> Maybe Int -> Maybe Bool
+detect_white_page_maybe :: Maybe (CPic.Image CPic.Pixel8) -> Maybe Int -> Maybe (Float, Bool)
 detect_white_page_maybe Nothing Nothing = Nothing
 detect_white_page_maybe _ Nothing = Nothing
 detect_white_page_maybe Nothing _ = Nothing
 detect_white_page_maybe (Just image) (Just limit)= Just $ detect_white_page image limit
 
 
-detect_white_page_maybe_io :: IO (Maybe (CPic.Image CPic.Pixel8)) -> Maybe Int -> IO (Maybe Bool)
+detect_white_page_maybe_io :: IO (Maybe (CPic.Image CPic.Pixel8)) -> Maybe Int ->
+                                                                     IO (Maybe (Float, Bool))
 detect_white_page_maybe_io image limit = do
                                       i <- image
 
