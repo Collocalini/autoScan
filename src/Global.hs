@@ -12,7 +12,7 @@ inputArgs,
 
 tag_DMap,
 
---list_arguments,
+list_arguments,
 
 eol_char,
 
@@ -34,7 +34,10 @@ to_grayscale_io_maybe,
 run_script,
 ls,
 
-read_analysis_file
+read_analysis_file,
+
+argument_perform
+
 
 ) where
 
