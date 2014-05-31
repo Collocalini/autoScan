@@ -6,9 +6,18 @@ license: AllRightsReserved
 license-file: "license"
 copyright:
 maintainer:
-build-depends: JuicyPixels -any, array -any, base -any,
-               containers -any, deepseq -any, monads-tf -any, process -any,
-               vector -any
+build-depends: JuicyPixels -any,
+               array -any, base -any,
+               containers -any,
+               deepseq -any,
+               process -any,
+               vector -any,
+               bytestring >= 0.9.1 && < 0.11,
+               MonadCatchIO-transformers >= 0.2.1 && < 0.4,
+               mtl                       >= 2     && < 3,
+               snap-core                 >= 0.9   && < 0.11,
+               snap-server               >= 0.9   && < 0.11,
+               monads-tf -any
 stability:
 homepage:
 package-url:
@@ -43,7 +52,10 @@ hs-source-dirs: src
 other-modules: PatternRecognition Global
 ghc-prof-options:
 ghc-shared-options:
-ghc-options: -rtsopts
+ghc-options: -rtsopts -static -XPackageImports -threaded -Wall -fwarn-tabs  -O2
 hugs-options:
 nhc98-options:
 jhc-options:
+
+
+-- -XPackageImports -funbox-strict-fields

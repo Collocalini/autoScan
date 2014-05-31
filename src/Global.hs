@@ -6,13 +6,13 @@ Perform(..),
 InputArguments(..),
 inputArgs,
 
-flags ,
+--flags ,
 
-options,
+--options,
 
 tag_DMap,
 
-list_arguments,
+--list_arguments,
 
 eol_char,
 

@@ -164,8 +164,9 @@ detect_white_page image@(CPic.Image {CPic.imageWidth = width,
    --(abs (average95_100 - median)) >=  limit
 
    --(abs (max - min)) <=  limit
-   ((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
+   --((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
    --(abs (max - min))
+   ((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
    where
 
    shave x y = CPic.pixelAt image (x+(div width 10)-1) (y+(div height 10)-1)
@@ -189,6 +190,8 @@ detect_white_page image@(CPic.Image {CPic.imageWidth = width,
    median = ars `seq`  DList.head $ DList.drop (div length 2) ars
    average95_100 :: Float
    average95_100 = ars `seq` ( (DList.sum $ DList.drop length95ps ars)) / (fromIntegral length5ps)
+   average0_5 :: Float
+   average0_5 = ars `seq` ( (DList.sum $ DList.take length5ps ars)) / (fromIntegral length5ps)
 
 
 detect_white_page_maybe :: Maybe (CPic.Image CPic.Pixel8) -> Maybe Int -> Maybe (Float, Bool)
