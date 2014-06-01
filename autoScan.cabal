@@ -17,7 +17,8 @@ build-depends: JuicyPixels -any,
                mtl                       >= 2     && < 3,
                snap-core                 >= 0.9   && < 0.11,
                snap-server               >= 0.9   && < 0.11,
-               monads-tf -any
+               monads-tf -any,
+               directory -any
 stability:
 homepage:
 package-url:
