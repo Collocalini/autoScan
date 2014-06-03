@@ -64,6 +64,7 @@ data InputArguments = InputArguments {
                                      ,scans_to_pdfs :: Maybe FilePath
                                      ,scripts_folder :: FilePath
                                      ,white_page_tolerance :: Maybe Int
+                                     ,working_folder :: String
                                      }
 
 
@@ -91,6 +92,8 @@ inputArgs tm = InputArguments {
   ,scripts_folder = scripts_folder'
 
   ,white_page_tolerance = white_page_tolerance'
+
+  ,working_folder = working_folder'
   }
   where
   analysis_results_file'
@@ -149,6 +152,10 @@ inputArgs tm = InputArguments {
     |s == "" = Nothing
     where
     s= (DMap.findWithDefault default_white_page_tolerance argument_white_page_tolerance tm)
+
+
+  working_folder' = (DMap.findWithDefault default_working_folder argument_working_folder tm)
+
 ----------------------------------------------------------------------------------------------------
 
 
@@ -169,6 +176,7 @@ argument_detected_pages_to_pdf = "detected-pages-to-pdf"
 argument_scans_to_pdfs = "scans-to-pdfs"
 argument_scripts_folder = "scripts-folder"
 argument_white_page_tolerance = "white-page-tolerance"
+argument_working_folder = "working-folder"
 
 
 default_analysis_results_file = ""
@@ -181,7 +189,7 @@ default_detected_pages_to_pdf = ""
 default_scripts_folder = "."
 default_scans_to_pdfs = ""
 default_white_page_tolerance = ""
-
+default_working_folder = "."
 
 
 perform_stage_analyse = "analyse"
@@ -206,7 +214,8 @@ options =  [
              argument_detected_pages_to_pdf,
              argument_scans_to_pdfs,
              argument_scripts_folder,
-             argument_white_page_tolerance
+             argument_white_page_tolerance,
+             argument_working_folder
            ]
 
 {-- ================================================================================================
@@ -223,7 +232,8 @@ tag_DMap [] = DMap.fromList [
           (argument_detected_pages_to_pdf,       default_detected_pages_to_pdf),
           (argument_scans_to_pdfs,               default_scans_to_pdfs),
           (argument_scripts_folder,              default_scripts_folder),
-          (argument_white_page_tolerance,        default_white_page_tolerance)
+          (argument_white_page_tolerance,        default_white_page_tolerance),
+          (argument_working_folder,              default_working_folder)
 
    ]----]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
 
@@ -406,7 +416,7 @@ to_grayscale_io_maybe img = do i <- img
 {-- ================================================================================================
 ================================================================================================ --}
 run_script :: String -> IO ()
-run_script script = do (runCommand $ script ) >>= waitForProcess
+run_script script = do (runCommand $ "\"" ++ script ++ "\"" ) >>= waitForProcess
                        return ()
 ----------------------------------------------------------------------------------------------------
 
@@ -441,7 +451,7 @@ read_analysis_file f = step2 $ map step1 f
    step1 [] = Nothing
    step1 [_,_] = Nothing
    step1 [a,b,c] = Just (a, read b, read c)
-   step1 (a:b:c:rest) = (a ++ b) `seq` step1 $ (a ++ b):c:rest
+   step1 (a:b:c:rest) = (unwords [a, b]) `seq` step1 $ (unwords [a, b]):c:rest
 
    step2 [] = []
    step2 ((Just x):rest) = x:step2 rest

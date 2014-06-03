@@ -22,7 +22,7 @@ import System.Environment()
 import Data.List
 import "monads-tf" Control.Monad.Reader
 import Control.DeepSeq
-import qualified Codec.Picture as CPic
+--import qualified Codec.Picture as CPic
 
 ---from this project
 import Global
@@ -123,7 +123,7 @@ analyse = do
 
 
       load f = (to_grayscale_io_maybe.loadImage) f
-      detect f = (detect_bookmark_maybe_io (load f))
+      detect f = (detect_bookmark_maybe_io $ load f)
       whiteP f l = (detect_white_page_maybe_io (load f) l)
 ----------------------------------------------------------------------------------------------------
 
@@ -221,31 +221,32 @@ use_analysis_stage a = do
   (InputArguments {white_pages_to_pdf = white_pages_to_pdf'
                   ,detected_pages_to_pdf = detected_pages_to_pdf'
                   ,scans_to_pdfs = scans_to_pdfs'
-                   --mark_with = mark_with'
+                  ,working_folder = working_folder'
                   }) <- ask
+  let cd = "cd \'" ++ working_folder' ++ "\'\n"
 
   case (white_pages_to_pdf',detected_pages_to_pdf',scans_to_pdfs') of
 
      (Nothing                 , Nothing                    , Just scans_to_pdfs')  ->
-         o_o_l scans_to_pdfs'
+         o_o_l scans_to_pdfs' cd
 
      (Just white_pages_to_pdf', Nothing                    , Just scans_to_pdfs')  ->
-         l_o_l white_pages_to_pdf' scans_to_pdfs'
+         l_o_l white_pages_to_pdf' scans_to_pdfs' cd
 
      (Nothing                 , Just detected_pages_to_pdf', Just scans_to_pdfs')  ->
-         o_l_l detected_pages_to_pdf' scans_to_pdfs'
+         o_l_l detected_pages_to_pdf' scans_to_pdfs' cd
 
      (Just white_pages_to_pdf', Just detected_pages_to_pdf', Just scans_to_pdfs')  ->
-         l_l_l white_pages_to_pdf' detected_pages_to_pdf' scans_to_pdfs'
+         l_l_l white_pages_to_pdf' detected_pages_to_pdf' scans_to_pdfs' cd
 
      (Just white_pages_to_pdf', Nothing                    , Nothing)  ->
-         l_o_o white_pages_to_pdf'
+         l_o_o white_pages_to_pdf' cd
 
      (Just white_pages_to_pdf', Just detected_pages_to_pdf', Nothing)  ->
-         l_l_o white_pages_to_pdf' detected_pages_to_pdf'
+         l_l_o white_pages_to_pdf' detected_pages_to_pdf' cd
 
      (Nothing                 , Just detected_pages_to_pdf', Nothing)  ->
-         o_l_o detected_pages_to_pdf'
+         o_l_o detected_pages_to_pdf' cd
 
      (_) -> return ()
 
@@ -261,7 +262,7 @@ use_analysis_stage a = do
       step2 ((fp, _, Page):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
       step2 ((fp, _, FaultyPage):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
       step2 ((_, _, _):rest) = step2 rest
-      gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=" ++ f ++ show i ++ ".pdf "
+      gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=\'" ++ f ++ show i ++ ".pdf\' "
 
 
   step1a :: FilePath -> [[(FilePath, Int, PageMark)]] -> [String]
@@ -272,62 +273,65 @@ use_analysis_stage a = do
       step2 [] = []
       step2 ((fp, _, WhitePage):rest) = ("'" ++ take ((length fp)-3) fp ++ "pdf'  ") : (step2 rest)
       step2 ((_, _, _):rest) = step2 rest
-      gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=" ++ f ++ show i ++ ".pdf "
+      gs f i = "gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=\'" ++ f ++ show i ++ ".pdf\' "
 
 
-  o_o_l scans_to_pdfs' = do
-        --lift $ putStrLn $ show $ (\(_, d) -> groupByFile d) $ weedWhitePages a
-        lift $ writeFile (scans_to_pdfs' ++ ".sh") $ unlines $ step1 scans_to_pdfs' $
+
+  to_script cd scr = cd ++ unlines scr
+
+
+  o_o_l scans_to_pdfs' cd = do
+    lift $ writeFile (scans_to_pdfs' ++ ".sh") $  to_script cd $ step1 scans_to_pdfs' $
                                                        (\(_, d) -> groupByFile d) $ weedWhitePages a
-        lift $ run_script (scans_to_pdfs' ++ ".sh")
+    lift $ run_script (scans_to_pdfs' ++ ".sh")
 
 
-  l_o_l white_pages_to_pdf' scans_to_pdfs' = do
+  l_o_l white_pages_to_pdf' scans_to_pdfs' cd = do
     let (w, d) = weedWhitePages a
-    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ unlines $ step1a white_pages_to_pdf' [w]
-    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ unlines $ step1 scans_to_pdfs' $ groupByFile d
+    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ to_script cd $ step1a white_pages_to_pdf' [w]
+    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ to_script cd $ step1 scans_to_pdfs' $ groupByFile d
 
     lift $ run_script (white_pages_to_pdf' ++ ".sh")
     lift $ run_script (scans_to_pdfs' ++ ".sh")
 
 
-  o_l_l detected_pages_to_pdf' scans_to_pdfs' = do
+  o_l_l detected_pages_to_pdf' scans_to_pdfs' cd = do
     let (_, d) = weedWhitePages a
-    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ unlines $ step1 detected_pages_to_pdf' [d]
-    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ unlines $ step1 scans_to_pdfs' $ groupByFile d
+    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ to_script cd $   step1 detected_pages_to_pdf' [d]
+    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ to_script cd $  step1 scans_to_pdfs' $ groupByFile d
 
     lift $ run_script (detected_pages_to_pdf' ++ ".sh")
     lift $ run_script (scans_to_pdfs' ++ ".sh")
 
-  l_l_l white_pages_to_pdf' detected_pages_to_pdf' scans_to_pdfs' = do
+  l_l_l white_pages_to_pdf' detected_pages_to_pdf' scans_to_pdfs' cd = do
     let (w, d) = weedWhitePages a
-    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ unlines $ step1a white_pages_to_pdf' [w]
-    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ unlines $ step1 detected_pages_to_pdf' [d]
-    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ unlines $ step1 scans_to_pdfs' $ groupByFile d
+    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ to_script cd $ step1a white_pages_to_pdf' [w]
+    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ to_script cd $ step1 detected_pages_to_pdf' [d]
+    lift $ writeFile (scans_to_pdfs' ++ ".sh") $ to_script cd $ step1 scans_to_pdfs' $ groupByFile d
 
     lift $ run_script (white_pages_to_pdf' ++ ".sh")
     lift $ run_script (detected_pages_to_pdf' ++ ".sh")
     lift $ run_script (scans_to_pdfs' ++ ".sh")
 
-  l_o_o white_pages_to_pdf' = do
+  l_o_o white_pages_to_pdf' cd = do
     let (w, _) = weedWhitePages a
-    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ unlines $ step1a white_pages_to_pdf' [w]
+    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ to_script cd $ step1a white_pages_to_pdf' [w]
 
     lift $ run_script (white_pages_to_pdf' ++ ".sh")
 
 
-  l_l_o white_pages_to_pdf' detected_pages_to_pdf' = do
+  l_l_o white_pages_to_pdf' detected_pages_to_pdf' cd = do
     let (w, d) = weedWhitePages a
-    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ unlines $ step1a white_pages_to_pdf' [w]
-    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ unlines $ step1 detected_pages_to_pdf' [d]
+    lift $ writeFile (white_pages_to_pdf' ++ ".sh") $ to_script cd $ step1a white_pages_to_pdf' [w]
+    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ to_script cd $ step1 detected_pages_to_pdf' [d]
 
     lift $ run_script (white_pages_to_pdf' ++ ".sh")
     lift $ run_script (detected_pages_to_pdf' ++ ".sh")
 
 
-  o_l_o detected_pages_to_pdf' = do
+  o_l_o detected_pages_to_pdf' cd = do
     let (_, d) = weedWhitePages a
-    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ unlines $ step1 detected_pages_to_pdf' [d]
+    lift $ writeFile (detected_pages_to_pdf' ++ ".sh") $ to_script cd $ step1 detected_pages_to_pdf' [d]
 
     lift $ run_script (detected_pages_to_pdf' ++ ".sh")
 

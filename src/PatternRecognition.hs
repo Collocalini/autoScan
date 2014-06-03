@@ -158,7 +158,10 @@ detect_bookmarks_maybe_io images = do
 ================================================================================================ --}
 detect_white_page :: CPic.Image CPic.Pixel8 -> Int -> (Float, Bool)
 detect_white_page image@(CPic.Image {CPic.imageWidth = width,
-                                     CPic.imageHeight = height}) l =
+                                     CPic.imageHeight = height}) l
+   |min<max   = ((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
+   |otherwise = ((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
+
 
    --(abs (average95_100 - median)) <= limit
    --(abs (average95_100 - median)) >=  limit
@@ -166,7 +169,7 @@ detect_white_page image@(CPic.Image {CPic.imageWidth = width,
    --(abs (max - min)) <=  limit
    --((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
    --(abs (max - min))
-   ((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
+   --((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
    where
 
    shave x y = CPic.pixelAt image (x+(div width 10)-1) (y+(div height 10)-1)
@@ -183,8 +186,8 @@ detect_white_page image@(CPic.Image {CPic.imageWidth = width,
    length5ps = 5* (div length 100)
    length95ps = 95 * (div length 100)
    limit = fromIntegral l
-   --min = head ars
-   --max = last ars
+   min = head ars
+   max = last ars
    --cross = (max - min) / 2
    median :: Float
    median = ars `seq`  DList.head $ DList.drop (div length 2) ars
