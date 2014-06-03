@@ -106,7 +106,7 @@ readUserDir (Just p) =  (map step1 $ B8.toString $ B.concat p)
 
 create_ls_file cd = do
   path <- canonicalizePath $ cd ++ "/.."
-  writeFile (cd ++ "/ls_script") $ "find \'" ++  path ++ "\' -maxdepth 1 -name \"*\"|sort|egrep \".(PNG|png)\"|tee \'" ++ cd ++ "/files\'"
+  writeFile (cd ++ "/ls_script") $ "find \'" ++  path ++ "\' -maxdepth 1 -iname \"*.png\" -iname \"*.PNG\"|sort|tee \'" ++ cd ++ "/files\'"
 
 
 
