@@ -1,3 +1,0 @@
-#ls *.PNG
-#ls Scan0002.PNG
-find . -name "*.PNG"  -type f |sort 

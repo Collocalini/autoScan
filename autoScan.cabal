@@ -25,7 +25,7 @@ data-files:
 data-dir: ""
 extra-source-files:
 extra-tmp-files:
- 
+
 executable: autoScan
 main-is: Main.hs
 buildable: True
