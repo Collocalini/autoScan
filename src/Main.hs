@@ -14,15 +14,13 @@
 
 module Main where
 
-import           Control.Applicative
---import "monads-tf"  Control.Monad.State
+import           Control.Applicative()
 import           Control.Concurrent
-import           Control.Concurrent.MVar
+import           Control.Concurrent.MVar()
 import           Control.Exception
 import           Snap.Core
 import           Snap.Util.FileServe()
---import           Snap.Util.FileUploads
-import Data.List
+import           Data.List
 import           Snap.Http.Server
 import qualified Data.ByteString.UTF8 as B8
 import qualified Data.ByteString.Char8 as B
@@ -151,6 +149,7 @@ readUserDir (Just p) =  (map step1 $ B8.toString $ B.concat p)
 
 {-- ================================================================================================
 ================================================================================================ --}
+create_ls_file :: FilePath -> IO ()
 create_ls_file cd = do
   path <- canonicalizePath $ cd ++ "/.."
   writeFile (cd ++ "/ls_script") $ "find \'" ++  path ++ "\' -maxdepth 1 -iname \"*.png\" -iname \"*.PNG\"|sort|tee \'" ++ cd ++ "/files\'"
@@ -161,12 +160,13 @@ create_ls_file cd = do
 
 {-- ================================================================================================
 ================================================================================================ --}
+create_mogrify_file :: FilePath -> IO ()
 create_mogrify_file path = do
   --path <- canonicalizePath $ cd ++ "/.."
   writeFile (path ++ "/pdf_to_png") $ "cd \'" ++ path ++ "\' \n" ++ "mogrify -type TrueColor -colorspace RGB -format PNG *.pdf"
 
 {--
-autoScan_fork :: IO ThreadId
+autoScan_fork :: IO ()
               -> (Either SomeException ThreadId -> StateT AppState IO ())
               -> IO ThreadId
 autoScan_fork action and_then = do
@@ -186,40 +186,39 @@ autoScan_fork action and_then = do
      return and_then
 --}
 
+--}
 
-autoScan_thread_is_dead :: Either SomeException ThreadId -> StateT AppState IO ()
-autoScan_thread_is_dead e = case e of
-                               (Right x) -> liftIO $ putStrLn "---------------right-------------"-- r x
-                               (Left _) -> liftIO $ putStrLn "!!!!!!!some exeption!!!!!"
- {-- where
-  r :: ThreadId -> StateT AppState IO ()
-  r id = do
-       appState@(AppState {in_work = in_work'}) <- get
+autoScan_thread_is_dead :: MVar AppState -> Either SomeException () -> IO ()
+autoScan_thread_is_dead appState e = case e of
+                               (Right _) -> return ()
+                               (Left  _) -> l
+  where
+  l = do
+       id <- myThreadId
 
-
-       --put $ appState___in_work appState $ filter (eqid id) in_work'
-
-
-       appState@(AppState {in_work = in_work'}) <- get
+       (modifyMVar appState $ step2 id) >>= \(s', i') -> putStrLn $ show $ (s', i')
 
 
-       (AppState {share_mount = s'
-                 ,in_work = i'}) <- get
-       --lift $ return $ liftIO $ putStrLn $ show $ (s', i')
-       liftIO $ putStrLn $ show $ (s', i')
        where
        eqid :: ThreadId -> (ThreadId, FilePath) -> Bool
        eqid id (idn, _)
          |id /= idn = True
          |otherwise = False
+
+
+       step2 :: ThreadId -> AppState -> IO (AppState, AppState)
+       step2 id (share_mount',in_work') = do
+           return (r, r)
+           where
+           r = (share_mount',filter (eqid id) in_work')
 --}
 
 --appState___in_work :: AppState -> [(ThreadId, FilePath)] -> AppState
 --appState___in_work a f = a {in_work = f}
 
 
-appState___in_work :: AppState -> [(ThreadId, FilePath)] -> AppState
-appState___in_work (x,_) f = (x, f)
+--appState___in_work :: AppState -> [(ThreadId, FilePath)] -> AppState
+--appState___in_work (x,_) f = (x, f)
 
 --}
 {--
@@ -291,7 +290,7 @@ killHandler appState = do
 
    let (l,r) = partition (eqpath path) in_work'
 
-   liftIO $ mapM kill l
+   _ <- liftIO $ mapM kill l
 
    (liftIO $ modifyMVar appState $ step2 r) >>= \(s', i') -> liftIO $ putStrLn $ show $ (s', i')
 
@@ -340,12 +339,12 @@ isItReadyYetHandler appState = do
 
 
 
-
+submitt :: Maybe [B.ByteString] -> Snap ()
 submitt cd = do
   index <- liftIO $ read_file_if_exists "./static/submitted.html"
   writeBS $ B.pack $ index ++ " \n <input title=\"path to folder\" id=\"path\" name=\"path\" "
-          ++ "type=\"text\" hidden=\"true\" value=" ++ ( B.unpack $ mbStrToStr cd)
-          ++ " />   </body></html>"
+          ++ "type=\"text\" hidden=\"true\" value=\'" ++ ( B.unpack $ mbStrToStr cd)
+          ++ "\' />   </body></html>"
 
 
 
@@ -367,7 +366,8 @@ mogrifyHandler appState = do
      (True) -> do
         liftIO $ create_mogrify_file path
 
-        _ <- liftIO $ forkIO $ wrapAutoScan appState path $ run_script (path ++ "/pdf_to_png")
+        _ <- liftIO $ forkFinally (wrapAutoScan appState path $ run_script (path ++ "/pdf_to_png"))
+                                  (autoScan_thread_is_dead appState)
 
         submitt cd
         --writeBS $ B.pack "please wait"
@@ -401,30 +401,30 @@ wrapAutoScan appState path as = do
 
    id <- myThreadId
 
-   (modifyMVar appState $ step1 id path) >>= \(s', i') -> putStrLn $ show $ (s', i')
+   (modifyMVar appState $ step1 id ) >>= \(s', i') -> putStrLn $ show $ (s', i')
 
    as
 
-   (modifyMVar appState $ step2 id path) >>= \(s', i') -> putStrLn $ show $ (s', i')
+   (modifyMVar appState $ step2 id ) >>= \(s', i') -> putStrLn $ show $ (s', i')
 
 
    where
    eqid :: ThreadId -> (ThreadId, FilePath) -> Bool
-   eqid id (idn, _)
-     |id /= idn = True
+   eqid id' (idn, _)
+     |id' /= idn = True
      |otherwise = False
 
-   step1 :: ThreadId -> FilePath -> AppState -> IO (AppState, AppState)
-   step1 id path as@(share_mount',in_work') = do
+   step1 :: ThreadId -> AppState -> IO (AppState, AppState)
+   step1 id' (share_mount',in_work') = do
        return (r, r)
        where
-       r = (share_mount',(id, path):in_work')
+       r = (share_mount',(id', path):in_work')
 
-   step2 :: ThreadId -> FilePath -> AppState -> IO (AppState, AppState)
-   step2 id path as@(share_mount',in_work') = do
+   step2 :: ThreadId -> AppState -> IO (AppState, AppState)
+   step2 id' (share_mount',in_work') = do
        return (r, r)
        where
-       r = (share_mount',filter (eqid id) in_work')
+       r = (share_mount',filter (eqid id') in_work')
 -----------------------------------------------------------------------------------------------------
 
 
@@ -460,14 +460,15 @@ demoHandler_common appState = do
 ================================================================================================ --}
 demo_aHandler :: MVar AppState -> Snap ()
 demo_aHandler appState = do
-   (share_mount', in_work') <- liftIO $ readMVar appState
-   (cd, cd', af',  path_cd, path_af) <- demoHandler_common appState
+   (_, in_work') <- liftIO $ readMVar appState
+   (cd, cd', af',  path_cd, _) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
         liftIO $ create_ls_file cd'
 
-        _ <- liftIO $ forkIO $ wrapAutoScan appState path_cd $ runAutoScan_a cd' af'
+        _ <- liftIO $ forkFinally (wrapAutoScan appState path_cd $ runAutoScan_a cd' af')
+                                  (autoScan_thread_is_dead appState)
 
         submitt cd
      (False) -> writeBS $ B.pack "directory is in use"
@@ -492,6 +493,7 @@ wrapAutoScan as = do
 
 {-- ================================================================================================
 ================================================================================================ --}
+runAutoScan_a :: FilePath -> FilePath -> IO ()
 runAutoScan_a cd af = do
    autoScan $ ["--perform"] ++ ["analyse,save-analysis-results,use-analysis-results"] ++
           ["--analysis-results-file"]      ++ [cd ++ "/" ++ af] ++
@@ -513,14 +515,15 @@ runAutoScan_a cd af = do
 ================================================================================================ --}
 demo_bHandler :: MVar AppState -> Snap ()
 demo_bHandler appState = do
-   (share_mount', in_work') <- liftIO $ readMVar appState
-   (cd, cd', af',  path_cd, path_af) <- demoHandler_common appState
+   (_, in_work') <- liftIO $ readMVar appState
+   (cd, cd', af',  path_cd, _) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
         liftIO $ create_ls_file cd'
 
-        _ <- liftIO $ forkIO $ wrapAutoScan appState path_cd $ runAutoScan_b cd' af'
+        _ <- liftIO $ forkFinally (wrapAutoScan appState path_cd $ runAutoScan_b cd' af')
+                                  (autoScan_thread_is_dead appState)
 
         submitt cd
      (False) -> writeBS $ B.pack "directory is in use"
@@ -534,7 +537,7 @@ demo_bHandler appState = do
 
 {-- ================================================================================================
 ================================================================================================ --}
---runAutoScan :: IO ()
+runAutoScan_b :: FilePath -> FilePath -> IO ()
 runAutoScan_b cd af = do
    autoScan $ ["--perform"] ++ ["read-analysis,use-analysis-results"] ++
           ["--analysis-results-file"]      ++ [cd ++ "/" ++ af] ++
