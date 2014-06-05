@@ -22,6 +22,7 @@ import           Control.Exception
 import           Snap.Core
 import           Snap.Util.FileServe()
 --import           Snap.Util.FileUploads
+import Data.List
 import           Snap.Http.Server
 import qualified Data.ByteString.UTF8 as B8
 import qualified Data.ByteString.Char8 as B
@@ -109,6 +110,7 @@ site appState = --do
           , (B.pack "demo_b", demo_bHandler appState)
           , (B.pack "mogrify", mogrifyHandler appState)
           , (B.pack "isItReadyYet", isItReadyYetHandler appState)
+          , (B.pack "kill", killHandler appState)
          -- , (B.pack "test", testHandler)
           --, (B.pack "submitted", writeBS $ B.pack "Please wait")
 
@@ -271,6 +273,46 @@ testHandler = do
    step4 a fn = modifyMVar a step3--}
  -----------------------------------------------------------------------------------------------------
 --}
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
+killHandler :: MVar AppState -> Snap ()
+killHandler appState = do
+
+   (share_mount', in_work') <- liftIO $ readMVar appState
+
+   cd <- getsRequest (rqParam  $ B.pack "cd")
+   let cd' = share_mount' ++ "/" ++ (readUserDir cd)
+   path <- liftIO $ canonicalizePath $ cd' ++ "/.."
+
+   liftIO $ putStrLn $ show $ in_work'
+
+   let (l,r) = partition (eqpath path) in_work'
+
+   liftIO $ mapM kill l
+
+   (liftIO $ modifyMVar appState $ step2 r) >>= \(s', i') -> liftIO $ putStrLn $ show $ (s', i')
+
+   indexHandler
+   where
+   eqpath :: FilePath -> (ThreadId, FilePath) -> Bool
+   eqpath path (_, pathn)
+     |path == pathn = True
+     |otherwise = False
+   kill :: (ThreadId, FilePath) -> IO ()
+   kill (id, _) = killThread id
+
+   --step2 :: -> AppState -> IO (AppState, AppState)
+   step2 list (share_mount',_) = do
+       return (r, r)
+       where
+       r = (share_mount', list)
+
+-----------------------------------------------------------------------------------------------------
+
+
 
 
 
