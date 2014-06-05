@@ -188,7 +188,7 @@ default_white_pages_to_pdf = ""
 default_detected_pages_to_pdf = ""
 default_scripts_folder = "."
 default_scans_to_pdfs = ""
-default_white_page_tolerance = ""
+default_white_page_tolerance = "100"
 default_working_folder = "."
 
 

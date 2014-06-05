@@ -125,7 +125,7 @@ site appState = --do
 indexHandler :: Snap ()
 indexHandler = do
     index <- liftIO $ read_file_if_exists "./static/select_folder.html"
-    writeBS $ B.pack index
+    writeBS $ B8.fromString index
 -----------------------------------------------------------------------------------------------------
 
 
@@ -433,22 +433,28 @@ wrapAutoScan appState path as = do
 
 {-- ================================================================================================
 ================================================================================================ --}
-demoHandler_common :: MVar AppState -> Snap (Maybe [B.ByteString], FilePath, FilePath, FilePath, FilePath)
+demoHandler_common :: MVar AppState ->
+   Snap (Maybe [B.ByteString], FilePath, FilePath, String, FilePath, FilePath)
 demoHandler_common appState = do
    (share_mount', in_work') <- liftIO $ readMVar appState
 
    cd <- getsRequest (rqParam  $ B.pack "cd")
    af <- getsRequest (rqParam $ B.pack "af")
+   wpt <- getsRequest (rqParam $ B.pack "wpt")
 
    let cd' = share_mount' ++ "/" ++ (readUserDir cd)
    path_cd <- liftIO $ canonicalizePath $ cd' ++ "/.."
    cd' <- liftIO $ canonicalizePath cd'
+   let wpt' = (\s -> case s of
+                        (Nothing) -> ""
+                        (Just s')  -> B8.toString $ B.concat s') wpt
 
    let af' = readUserDir af
    let path_af = af' -- <- liftIO $ canonicalizePath af'
 
    liftIO $ putStrLn $ show $ in_work'
-   return (cd, cd', af', path_cd, path_af)
+   liftIO $ putStrLn wpt'
+   return (cd, cd', af', wpt', path_cd, path_af)
 -----------------------------------------------------------------------------------------------------
 
 
@@ -461,13 +467,13 @@ demoHandler_common appState = do
 demo_aHandler :: MVar AppState -> Snap ()
 demo_aHandler appState = do
    (_, in_work') <- liftIO $ readMVar appState
-   (cd, cd', af',  path_cd, _) <- demoHandler_common appState
+   (cd, cd', af', wpt,  path_cd, _) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
         liftIO $ create_ls_file cd'
 
-        _ <- liftIO $ forkFinally (wrapAutoScan appState path_cd $ runAutoScan_a cd' af')
+        _ <- liftIO $ forkFinally (wrapAutoScan appState path_cd $ runAutoScan_a cd' af' wpt)
                                   (autoScan_thread_is_dead appState)
 
         submitt cd
@@ -493,8 +499,8 @@ wrapAutoScan as = do
 
 {-- ================================================================================================
 ================================================================================================ --}
-runAutoScan_a :: FilePath -> FilePath -> IO ()
-runAutoScan_a cd af = do
+runAutoScan_a :: FilePath -> FilePath -> String ->  IO ()
+runAutoScan_a cd af wpt = do
    autoScan $ ["--perform"] ++ ["analyse,save-analysis-results,use-analysis-results"] ++
           ["--analysis-results-file"]      ++ [cd ++ "/" ++ af] ++
           ["--analysis-detected-pages-to"] ++ [ cd ++ "/d"]  ++
@@ -504,7 +510,7 @@ runAutoScan_a cd af = do
           ["--scans-to-pdfs"]              ++ [ cd ++ "/zp"] ++
           ["--working-folder"]             ++ [cd]          ++
           ["--scripts-folder"]             ++ [cd]          ++
-          ["--white-page-tolerance"]       ++ [" 100 "]
+          ["--white-page-tolerance"]       ++ [wpt]
 -----------------------------------------------------------------------------------------------------
 
 
@@ -516,7 +522,7 @@ runAutoScan_a cd af = do
 demo_bHandler :: MVar AppState -> Snap ()
 demo_bHandler appState = do
    (_, in_work') <- liftIO $ readMVar appState
-   (cd, cd', af',  path_cd, _) <- demoHandler_common appState
+   (cd, cd', af', _,  path_cd, _) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
@@ -547,8 +553,8 @@ runAutoScan_b cd af = do
           ["--detected-pages-to-pdf"]      ++ [ cd ++ "/zd"] ++
           ["--scans-to-pdfs"]              ++ [ cd ++ "/zp"] ++
           ["--working-folder"]             ++ [cd]          ++
-          ["--scripts-folder"]             ++ [cd]          ++
-          ["--white-page-tolerance"]       ++ [" 100 "]
+          ["--scripts-folder"]             ++ [cd]        --  ++
+          --["--white-page-tolerance"]       ++ [" 100 "]
 -----------------------------------------------------------------------------------------------------
 
 
