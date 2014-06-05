@@ -193,7 +193,7 @@ killHandler appState = do
    step2 list (share_mount',_) = do
        return (r, r)
        where
-       r = (share_mount', list)
+       r = list `seq` (share_mount', list)
 
 -----------------------------------------------------------------------------------------------------
 
@@ -316,13 +316,13 @@ wrapAutoScan appState path as = do
    step1 id' (share_mount',in_work') = do
        return (r, r)
        where
-       r = (share_mount',(id', path):in_work')
+       r = (id', path):in_work' `seq` (share_mount',(id', path):in_work')
 
    step2 :: ThreadId -> AppState -> IO (AppState, AppState)
    step2 id' (share_mount',in_work') = do
        return (r, r)
        where
-       r = (share_mount',filter (eqid id') in_work')
+       r = filter (eqid id') in_work' `seq` (share_mount',filter (eqid id') in_work')
 -----------------------------------------------------------------------------------------------------
 
 
