@@ -36,15 +36,9 @@ import Global
 
 
 
---type AppState = (Bool, FilePath, FilePath)
-
---data AppState = AppState {share_mount :: FilePath
---                         ,in_work :: [(ThreadId, FilePath)]}
-
 type AppState = (FilePath
                 , [(ThreadId, FilePath)])
---type AppState1 = MVar (FilePath
---                , [(ThreadId, FilePath)])
+
 
 main :: IO ()
 main = do
@@ -54,17 +48,8 @@ main = do
      (True) -> autoScan args
      (False) -> do
        sm <- readFile "./share_mount"
-
-       --quickHttpServe $ evalStateT site (AppState {share_mount = filter (/= '\n') sm
-       --                                           , in_work = []})
-       --quickHttpServe $ evalStateT site (filter (/= '\n') sm, [])
-
-
        id <- myThreadId
        as <- newMVar (filter (/= '\n') sm, [(id, filter (/= '\n') sm)])
-       --as <- evalMState True site' (filter (/= '\n') sm, [(id, filter (/= '\n') sm)])
-       --evalMState True site' (filter (/= '\n') sm, [(id, filter (/= '\n') sm)]) --) >>=
-        --  quickHttpServe
        quickHttpServe $ site as
        return ()
 
@@ -81,20 +66,6 @@ hasPerform (Just (p,_):_) = p == argument_perform
 ----------------------------------------------------------------------------------------------------
 
 
-{--
-{-- ================================================================================================
-================================================================================================ --}
-site' :: MState AppState IO (MState AppState Snap ())
---site' :: MVar [Int] -> Snap ()
-site' =
-    route [ (B.pack "test", testHandler)]
-
-----------------------------------------------------------------------------------------------------
---}
-
-
-
-
 {-- ================================================================================================
 ================================================================================================ --}
 site :: MVar AppState ->  Snap ()
@@ -109,14 +80,7 @@ site appState = --do
           , (B.pack "mogrify", mogrifyHandler appState)
           , (B.pack "isItReadyYet", isItReadyYetHandler appState)
           , (B.pack "kill", killHandler appState)
-         -- , (B.pack "test", testHandler)
-          --, (B.pack "submitted", writeBS $ B.pack "Please wait")
-
           ]
-   -- <|>
-   -- dir (B.pack "static") (serveDirectory "./static")
-
-
 ----------------------------------------------------------------------------------------------------
 
 {-- ================================================================================================
@@ -132,7 +96,6 @@ indexHandler = do
 
 {-- ================================================================================================
 ================================================================================================ --}
-
 readUserDir :: Maybe [B8.ByteString] -> FilePath
 readUserDir Nothing = ""
 readUserDir (Just p) =  (map step1 $ B8.toString $ B.concat p)
@@ -164,30 +127,13 @@ create_mogrify_file :: FilePath -> IO ()
 create_mogrify_file path = do
   --path <- canonicalizePath $ cd ++ "/.."
   writeFile (path ++ "/pdf_to_png") $ "cd \'" ++ path ++ "\' \n" ++ "mogrify -type TrueColor -colorspace RGB -format PNG *.pdf"
+-----------------------------------------------------------------------------------------------------
 
-{--
-autoScan_fork :: IO ()
-              -> (Either SomeException ThreadId -> StateT AppState IO ())
-              -> IO ThreadId
-autoScan_fork action and_then = do
 
-   mask $ \restore ->
-      forkIO $ try (restore action) >>= (\t -> do
-                                              at <- return $ and_then t
-                                              return ())
-  --return $ return ()
- -- where
- {--
-  at ::   (Either SomeException ThreadId -> StateT AppState IO ())
-        -> (Either SomeException ThreadId -> IO ())
-  at and_then = do
-     --a <- and_then
-     --b <- a
-     return and_then
---}
 
---}
 
+{-- ================================================================================================
+================================================================================================ --}
 autoScan_thread_is_dead :: MVar AppState -> Either SomeException () -> IO ()
 autoScan_thread_is_dead appState e = case e of
                                (Right _) -> return ()
@@ -211,67 +157,7 @@ autoScan_thread_is_dead appState e = case e of
            return (r, r)
            where
            r = (share_mount',filter (eqid id) in_work')
---}
-
---appState___in_work :: AppState -> [(ThreadId, FilePath)] -> AppState
---appState___in_work a f = a {in_work = f}
-
-
---appState___in_work :: AppState -> [(ThreadId, FilePath)] -> AppState
---appState___in_work (x,_) f = (x, f)
-
---}
-{--
-{-- ================================================================================================
-================================================================================================ --}
-testHandler :: MState AppState Snap ()
---testHandler :: MVar [Int] -> Snap ()
-testHandler = do
-    x<- get
-
-
-   --writeBS $ B.pack $ show x1 ++ "\n"
-
-   --x <- liftIO $ step2 x
-
-   --x2<- liftIO $ modifyMVar x step3
-
-   --put x2
-
-   --x3 <- get
-
-   --x <- liftIO $ modifyMVar mvar step1
-
-   --(f,l) <- x
-    liftIO $ putStrLn $ show x
-   --writeBS $ B.pack $ show (f,l)
-
- {--  where
-   step1 :: AppState -> IO (AppState, AppState)
---   step1 :: [Int] -> IO ([Int], [Int])
---   step1 y = let y'=head y+1 in return (y':y,y':y)
-   step1 as@(share_mount',in_work') = do
-       id <- myThreadId
-       return ((share_mount',(id, "aaa"):in_work'), (share_mount',(id, "aaa"):in_work'))--}
- {--  step2 :: AppState -> IO AppState
-   step2 as@(share_mount',in_work') = do
-       id <- myThreadId
-       return (share_mount',(id, "aaa"):in_work')
-
-   step3 :: AppState1 -> IO (AppState1, AppState1)
---   step1 :: [Int] -> IO ([Int], [Int])
---   step1 y = let y'=head y+1 in return (y':y,y':y)
-   step3 as = do
-       (share_mount',in_work') <- readMVar as
-       id <- myThreadId
-       l <- newMVar (share_mount',(id, "aaa"):in_work')
-       r<- newMVar (share_mount',(id, "aaa"):in_work')
-       return (l, r)--}
- {--
-   step4 :: AppState1 -> (AppState1 -> IO (AppState1, AppState1)) -> IO AppState1
-   step4 a fn = modifyMVar a step3--}
- -----------------------------------------------------------------------------------------------------
---}
+-----------------------------------------------------------------------------------------------------
 
 
 
@@ -338,6 +224,8 @@ isItReadyYetHandler appState = do
 -----------------------------------------------------------------------------------------------------
 
 
+{-- ================================================================================================
+================================================================================================ --}
 
 submitt :: Maybe [B.ByteString] -> Snap ()
 submitt cd = do
@@ -345,6 +233,7 @@ submitt cd = do
   writeBS $ B.pack $ index ++ " \n <input title=\"path to folder\" id=\"path\" name=\"path\" "
           ++ "type=\"text\" hidden=\"true\" value=\'" ++ ( B.unpack $ mbStrToStr cd)
           ++ "\' />   </body></html>"
+-----------------------------------------------------------------------------------------------------
 
 
 
@@ -376,9 +265,18 @@ mogrifyHandler appState = do
 -----------------------------------------------------------------------------------------------------
 
 
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
 mbStrToStr :: Maybe [B.ByteString] -> B.ByteString
 mbStrToStr Nothing  = B.pack ""
 mbStrToStr (Just s) = B.concat s
+-----------------------------------------------------------------------------------------------------
+
+
+
 
 
 {-- ================================================================================================
@@ -445,9 +343,7 @@ demoHandler_common appState = do
    let cd' = share_mount' ++ "/" ++ (readUserDir cd)
    path_cd <- liftIO $ canonicalizePath $ cd' ++ "/.."
    cd' <- liftIO $ canonicalizePath cd'
-   let wpt' = (\s -> case s of
-                        (Nothing) -> ""
-                        (Just s')  -> B8.toString $ B.concat s') wpt
+   let wpt' = B8.toString $ mbStrToStr wpt
 
    let af' = readUserDir af
    let path_af = af' -- <- liftIO $ canonicalizePath af'
@@ -480,19 +376,6 @@ demo_aHandler appState = do
      (False) -> writeBS $ B.pack "directory is in use"
 -----------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-{--
-wrapAutoScan :: IO () -> IO ThreadId
-wrapAutoScan as = do
-   liftIO as
-   myThreadId
---}
 
 
 
@@ -559,8 +442,6 @@ runAutoScan_b cd af = do
 
 
 
-
---}
 
 
 
