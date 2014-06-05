@@ -108,6 +108,7 @@ site appState = --do
           , (B.pack "demo_a", demo_aHandler appState)
           , (B.pack "demo_b", demo_bHandler appState)
           , (B.pack "mogrify", mogrifyHandler appState)
+          , (B.pack "isItReadyYet", isItReadyYetHandler appState)
          -- , (B.pack "test", testHandler)
           --, (B.pack "submitted", writeBS $ B.pack "Please wait")
 
@@ -160,7 +161,7 @@ create_ls_file cd = do
 ================================================================================================ --}
 create_mogrify_file path = do
   --path <- canonicalizePath $ cd ++ "/.."
-  writeFile (path ++ "/pdf_to_png") $ "cd \'" ++ path ++ "\' \n" ++ "mogrify -format PNG *.pdf"
+  writeFile (path ++ "/pdf_to_png") $ "cd \'" ++ path ++ "\' \n" ++ "mogrify -type TrueColor -colorspace RGB -format PNG *.pdf"
 
 {--
 autoScan_fork :: IO ThreadId
@@ -275,6 +276,40 @@ testHandler = do
 
 {-- ================================================================================================
 ================================================================================================ --}
+isItReadyYetHandler :: MVar AppState -> Snap ()
+isItReadyYetHandler appState = do
+
+   (share_mount', in_work') <- liftIO $ readMVar appState
+
+   cd <- getsRequest (rqParam  $ B.pack "cd")
+   let cd' = share_mount' ++ "/" ++ (readUserDir cd)
+   path <- liftIO $ canonicalizePath $ cd' ++ "/.."
+
+   liftIO $ putStrLn $ show $ in_work'
+
+   case (n_o_t_in_use in_work' path) of
+     (True) -> do
+        index <- liftIO $ read_file_if_exists "./static/done.html"
+        writeBS $ B.pack index
+     (False) -> do
+        submitt cd
+
+-----------------------------------------------------------------------------------------------------
+
+
+
+
+submitt cd = do
+  index <- liftIO $ read_file_if_exists "./static/submitted.html"
+  writeBS $ B.pack $ index ++ " \n <input title=\"path to folder\" id=\"path\" name=\"path\" "
+          ++ "type=\"text\" hidden=\"true\" value=" ++ ( B.unpack $ mbStrToStr cd)
+          ++ " />   </body></html>"
+
+
+
+
+{-- ================================================================================================
+================================================================================================ --}
 mogrifyHandler :: MVar AppState -> Snap ()
 mogrifyHandler appState = do
 
@@ -292,10 +327,16 @@ mogrifyHandler appState = do
 
         _ <- liftIO $ forkIO $ wrapAutoScan appState path $ run_script (path ++ "/pdf_to_png")
 
-        writeBS $ B.pack "please wait"
+        submitt cd
+        --writeBS $ B.pack "please wait"
      (False) -> writeBS $ B.pack "directory is in use"
 
 -----------------------------------------------------------------------------------------------------
+
+
+mbStrToStr :: Maybe [B.ByteString] -> B.ByteString
+mbStrToStr Nothing  = B.pack ""
+mbStrToStr (Just s) = B.concat s
 
 
 {-- ================================================================================================
@@ -350,7 +391,7 @@ wrapAutoScan appState path as = do
 
 {-- ================================================================================================
 ================================================================================================ --}
-demoHandler_common :: MVar AppState -> Snap (FilePath, FilePath, FilePath, FilePath)
+demoHandler_common :: MVar AppState -> Snap (Maybe [B.ByteString], FilePath, FilePath, FilePath, FilePath)
 demoHandler_common appState = do
    (share_mount', in_work') <- liftIO $ readMVar appState
 
@@ -365,7 +406,7 @@ demoHandler_common appState = do
    let path_af = af' -- <- liftIO $ canonicalizePath af'
 
    liftIO $ putStrLn $ show $ in_work'
-   return (cd', af', path_cd, path_af)
+   return (cd, cd', af', path_cd, path_af)
 -----------------------------------------------------------------------------------------------------
 
 
@@ -378,7 +419,7 @@ demoHandler_common appState = do
 demo_aHandler :: MVar AppState -> Snap ()
 demo_aHandler appState = do
    (share_mount', in_work') <- liftIO $ readMVar appState
-   (cd', af',  path_cd, path_af) <- demoHandler_common appState
+   (cd, cd', af',  path_cd, path_af) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
@@ -386,7 +427,7 @@ demo_aHandler appState = do
 
         _ <- liftIO $ forkIO $ wrapAutoScan appState path_cd $ runAutoScan_a cd' af'
 
-        writeBS $ B.pack "please wait"
+        submitt cd
      (False) -> writeBS $ B.pack "directory is in use"
 -----------------------------------------------------------------------------------------------------
 
@@ -431,7 +472,7 @@ runAutoScan_a cd af = do
 demo_bHandler :: MVar AppState -> Snap ()
 demo_bHandler appState = do
    (share_mount', in_work') <- liftIO $ readMVar appState
-   (cd', af',  path_cd, path_af) <- demoHandler_common appState
+   (cd, cd', af',  path_cd, path_af) <- demoHandler_common appState
 
    case (n_o_t_in_use in_work' path_cd) of
      (True) -> do
@@ -439,7 +480,7 @@ demo_bHandler appState = do
 
         _ <- liftIO $ forkIO $ wrapAutoScan appState path_cd $ runAutoScan_b cd' af'
 
-        writeBS $ B.pack "please wait"
+        submitt cd
      (False) -> writeBS $ B.pack "directory is in use"
 -----------------------------------------------------------------------------------------------------
 
