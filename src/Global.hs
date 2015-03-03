@@ -382,7 +382,31 @@ to_grayscale :: CPic.DynamicImage -> CPic.Image CPic.Pixel8
 to_grayscale (CPic.ImageRGB8 img) = CPic.pixelMap step1 img
   where
   step1 :: CPic.PixelRGB8 -> CPic.Pixel8
-  step1 (CPic.PixelRGB8 r g b) = div (r+g+b) 3
+  step1 (CPic.PixelRGB8 r8 g8 b8) = round $ ((rf+gf+bf) / 3)
+     where
+     rf= fromIntegral r8
+     gf= fromIntegral g8
+     bf= fromIntegral b8
+
+
+
+to_grayscale (CPic.ImageRGBA8 img) = CPic.pixelMap step1 img
+  where
+  step1 :: CPic.PixelRGBA8 -> CPic.Pixel8
+  step1 (CPic.PixelRGBA8 r8 g8 b8 _) = round $ ((rf+gf+bf) / 3)
+     where
+     rf= fromIntegral r8
+     gf= fromIntegral g8
+     bf= fromIntegral b8
+
+to_grayscale (CPic.ImageRGB8 img) = CPic.pixelMap step1 img
+  where
+  step1 :: CPic.PixelRGB8 -> CPic.Pixel8
+  step1 (CPic.PixelRGB8 r8 g8 b8) = round $ ((rf+gf+bf) / 3)
+     where
+     rf= fromIntegral r8
+     gf= fromIntegral g8
+     bf= fromIntegral b8
 
 
 to_grayscale (CPic.ImageRGB16 img) = CPic.pixelMap step1 img

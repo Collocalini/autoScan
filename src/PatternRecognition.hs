@@ -159,7 +159,7 @@ detect_bookmarks_maybe_io images = do
 detect_white_page :: CPic.Image CPic.Pixel8 -> Int -> (Float, Bool)
 detect_white_page image@(CPic.Image {CPic.imageWidth = width,
                                      CPic.imageHeight = height}) l
-   |min<max   = ((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
+   |min>max   = ((abs (average95_100 - median)), (abs (average95_100 - median)) <= limit)
    |otherwise = ((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
 
 
@@ -172,25 +172,25 @@ detect_white_page image@(CPic.Image {CPic.imageWidth = width,
    --((abs (average0_5 - median)), (abs (average0_5 - median)) <= limit)
    where
 
-   shave x y = CPic.pixelAt image (x+(div width 10)-1) (y+(div height 10)-1)
+   shave x y = CPic.pixelAt image (x+(round $ (fromIntegral width) / 10)-1) (y+(round $ (fromIntegral height) / 10)-1)
 
    ar :: [CPic.Pixel8]
    ar = (\(CPic.Image {CPic.imageWidth = _,
                        CPic.imageHeight = _,
                        CPic.imageData = d}) -> DVSec.toList d) $
-                       CPic.generateImage shave ((width)-(div width 10)) ((height)-(div height 10))
+                       CPic.generateImage shave ((width)-(round $ (fromIntegral width) / 10)) ((height)-(round $ (fromIntegral height) / 10))
    ars :: [Float]
    ars = ar `seq`  DList.sort $ map fromIntegral ar
 
    length = DList.length ars
-   length5ps = 5* (div length 100)
-   length95ps = 95 * (div length 100)
+   length5ps = 5* (round $ (fromIntegral length) / 100)
+   length95ps = 95 * (round $ (fromIntegral length) / 100)
    limit = fromIntegral l
    min = head ars
    max = last ars
    --cross = (max - min) / 2
    median :: Float
-   median = ars `seq`  DList.head $ DList.drop (div length 2) ars
+   median = ars `seq`  DList.head $ DList.drop (round $ (fromIntegral length) / 2) ars
    average95_100 :: Float
    average95_100 = ars `seq` ( (DList.sum $ DList.drop length95ps ars)) / (fromIntegral length5ps)
    average0_5 :: Float
